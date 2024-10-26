@@ -1,7 +1,7 @@
 'use strict';
 
 const heygen_API = {
-  apiKey: 'YourApiKey',
+  apiKey: 'NWQ0ZjkxMzdjZTAwNGNiOWFlOWFkNjNkZWJkMjQwYTktMTcyNDA1NzIyOA==',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -36,7 +36,7 @@ async function createNewSession() {
   const voice = voiceID.value;
 
   // call the new interface to get the server's offer SDP and ICE server to create a new RTCPeerConnection
-  sessionInfo = await newSession('low', avatar, voice);
+  sessionInfo = await newSession('high', avatar, voice);
   const { sdp: serverSdp, ice_servers2: iceServers } = sessionInfo;
 
   // Create a new RTCPeerConnection

@@ -11,7 +11,7 @@
         <div class="actionRow">
           <label>
             AvatarID
-            <input id="avatarID" type="text" />
+            <input id="avatarID" type="text" value="Wayne_20240711"/>
           </label>
 
           <label>
@@ -31,12 +31,13 @@
           </label>
           <button id="repeatBtn">Repeat</button>
           <button id="talkBtn">Talk</button>
+          <button id="speachBtn">Speach</button>
 
         </div>
       </div>
 
       <p id="status"></p>
-
+      <div id="output"></div>
       <div class="videoSectionWrap">
         <div class="videoWrap">
           <video id="mediaElement" class="videoEle show" autoplay></video>
@@ -65,5 +66,31 @@
     </div>
 
     <script type="module" src="index.js"></script>
+    <script>
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
+        recognition.lang = 'zh-TW';
+        const startButton = document.getElementById('speachBtn');
+        const outputDiv = document.getElementById('output');
+        const taskInput = document.getElementById('taskInput');
+        const talkBtn = document.getElementById('talkBtn');
+        recognition.onstart = () => {
+            startButton.textContent = 'Listening...';
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            taskInput.value = transcript;
+            talkBtn.click();
+            // outputDiv.textContent = transcript;
+        };
+
+        recognition.onend = () => {
+            startButton.textContent = 'Start Voice Input';
+        };
+
+        startButton.addEventListener('click', () => {
+            recognition.start();
+        });
+    </script>
   </body>
 </html>

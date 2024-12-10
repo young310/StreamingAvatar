@@ -6,7 +6,7 @@ app.use(express.json());
 var threadId;
 var threadByUser;
 const openai = new OpenAI({
-  apiKey: "",
+  apiKey: "sk-INmbjWcyPLfgA6H9yQ_mAFW9N2ziqWtFiw_LOHMIwKT3BlbkFJ7N2T2pbddmhAMaG9z_V6M7oHNLartBpYoENEAtD4kA",
   defaultHeaders: { 'OpenAI-Beta': 'assistants=v2' }
 });
 // const threadId = createThread().then(thread => {return thread.id;});

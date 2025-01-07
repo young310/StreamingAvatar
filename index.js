@@ -1,7 +1,7 @@
 'use strict';
 
 const heygen_API = {
-  apiKey: 'NWQ0ZjkxMzdjZTAwNGNiOWFlOWFkNjNkZWJkMjQwYTktMTcyNDA1NzIyOA==',
+  apiKey: '',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -17,7 +17,8 @@ let sessionInfo = null;
 let peerConnection = null;
 
 function updateStatus(statusElement, message) {
-  statusElement.innerHTML += message + '<br>';
+  //statusElement.innerHTML += message + '<br>';
+  statusElement.innerHTML = message;
   statusElement.scrollTop = statusElement.scrollHeight;
 }
 
@@ -66,6 +67,9 @@ async function createNewSession() {
 
 // Start session and display audio and video when clicking the "Start" button
 async function startAndDisplaySession() {
+
+  document.getElementById("badcode").innerHTML = "playing";
+
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     return;
@@ -160,14 +164,17 @@ async function talkHandler() {
 
 // when clicking the "Close" button, close the connection
 async function closeConnectionHandler() {
+
+  document.getElementById("badcode").innerHTML = "not playing";
+
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     return;
   }
 
   renderID++;
-  hideElement(canvasElement);
-  hideElement(bgCheckboxWrap);
+  // hideElement(canvasElement);
+  // hideElement(bgCheckboxWrap);
   mediaCanPlay = false;
 
   updateStatus(statusElement, 'Closing connection... please wait');
@@ -332,6 +339,7 @@ async function stopSession(session_id) {
   }
 }
 
+/*
 const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
 removeBGCheckbox.addEventListener('click', () => {
   const isChecked = removeBGCheckbox.checked; // status after click
@@ -360,6 +368,7 @@ removeBGCheckbox.addEventListener('click', () => {
     renderID++;
   }
 });
+*/
 
 let renderID = 0;
 function renderCanvas() {
@@ -430,14 +439,18 @@ mediaElement.onloadedmetadata = () => {
   mediaCanPlay = true;
   mediaElement.play();
 
-  showElement(bgCheckboxWrap);
+  // showElement(bgCheckboxWrap);
 };
+
+/*
 const canvasElement = document.querySelector('#canvasElement');
 
 const bgCheckboxWrap = document.querySelector('#bgCheckboxWrap');
 const bgInput = document.querySelector('#bgInput');
+
 bgInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     renderCanvas();
   }
 });
+*/

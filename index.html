@@ -1,69 +1,223 @@
 <!doctype html>
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="index.css" />
     <link rel="icon" href="./favicon.ico" />
+
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script> 
   </head>
 
   <body>
-    <div class="main">
-      <div class="actionRowsWrap">
-        <div class="actionRow">
-          <label>
-            AvatarID
-            <input id="avatarID" type="text" />
-          </label>
-
-          <label>
-            VoiceID
-            <input id="voiceID" type="text" />
-          </label>
-
+    <!-- <button id="changepage">changepage</button> -->
+    <p id="subs"></p>
+    <div id="main">
+        <p style="display:none;" id="badcode">beginning</p>
+        <video class="bigVid" id="mediaElement" autoplay></video>
+        <div id="leftButtons">
           <button id="newBtn">New</button>
           <button id="startBtn">Start</button>
           <button id="closeBtn">Close</button>
+          <button id="speachBtn">Speech</button>
         </div>
 
-        <div class="actionRow">
-          <label>
-            Message
-            <input id="taskInput" type="text" />
-          </label>
-          <button id="repeatBtn">Repeat</button>
-          <button id="talkBtn">Talk</button>
-
-        </div>
-      </div>
-
-      <p id="status"></p>
-
-      <div class="videoSectionWrap">
-        <div class="videoWrap">
-          <video id="mediaElement" class="videoEle show" autoplay></video>
-          <canvas id="canvasElement" class="videoEle hide"></canvas>
-        </div>
-
-        <div class="actionRow switchRow hide" id="bgCheckboxWrap">
-          <div class="switchWrap">
-            <span>Remove background</span>
-            <label class="switch">
-              <input type="checkbox" id="removeBGCheckbox" />
-              <span class="slider round"></span>
+        <div id="statusBlock">
+            <label>
+                AvatarID
+                <input id="avatarID" type="text" value="Wayne_20240711"/>
             </label>
-          </div>
+    
+            <label>
+                VoiceID
+                <input id="voiceID" type="text" />
+            </label>
 
-          <label>
-            Background (CSS)
-            <input
-              type="text"
-              id="bgInput"
-              value='url("https://app.heygen.com/icons/heygen/logo_hori_text_light_bg.svg") center / contain no-repeat'
-            />
-          </label>
+            <label>
+                Language
+                <select style="width: 8vw;" name="languageDrop" id="languageDrop">
+                    <option value="English">English</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="German">German</option>
+                    <option value="French">French</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="Italian">Italian</option>
+                </select>
+            </label>  
+            <label>
+              Message
+              <input id="taskInput" type="text" />
+            </label>
+            <button id="repeatBtn">Repeat</button>
+            <button id="talkBtn">Talk</button>
+
+            <p style="color: yellow;" id="status"></p>
+            <div style="color: yellow;" id="output"></div>
         </div>
-      </div>
+
+        <div id="qrBlock">
+          <h1>Scan to access Deloitte's career website</h1>
+          <!-- <a id="resultsButton" href="results.html"></a> -->
+          <!-- <div id="qrCode"></div> -->
+        </div>
+    </div>
+
+
+    <div id="results">
+      <header id="reportHeader">
+        <h1 id="candidateName">Chicken Nuggets</h1>
+      </header>
+
+      <div id="reportMain">
+          <div id="sumBox">
+              <h2>Summary</h2>
+              <h3 id="role">Best Fit: Engineering</h3>
+              <canvas id="myRadarChart" style="width: 85%; margin-top: 1vh; margin-bottom: 1vh;"></canvas>
+              <div class="sumBlurb">
+                  <h3>Strengths</h3>
+                  <p id="strengths">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
+              </div>
+              <div class="sumBlurb">
+                  <h3>Weaknesses</h3>
+                  <p id="weaknesses">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
+              </div>
+              <div class="sumBlurb">
+                  <h3>Fit</h3>
+                  <p id="fit">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
+              </div>
+          </div>
+      
+          <div id="paramBoxes">
+              <div class="param">
+                <h2 id="eduhead">Educational Background</h2>
+                <p id="education">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+              </div>
+              <div class="param">
+                <h2 id="workhead">Work/Project Experience</h2>
+                <p  id="work">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+              </div>
+              <div class="param">
+                  <h2 id="techhead">Technical Ability</h2>
+                  <p  id="technical">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+              </div>
+              <div class="param">
+                  <h2 id="softhead">Soft Skills</h2>
+                  <p id="soft">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+              </div>
+              <div class="param">
+                  <h2 id="behhead">Interview Behavior</h2>
+                  <p id="behavior">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+              </div>
+              <div class="param">
+                <h2 id="sumhead">Interview Summary</h2>
+                <p id="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+              </div>   
+          </div>
+        </div>
     </div>
 
     <script type="module" src="index.js"></script>
+    <!-- <script type="module" src="qrcode.js"></script> -->
+    <script>
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
+        
+        //determines recognition language based on dropdown selection
+        var selector = document.getElementById("languageDrop");
+        var selectedLang = selector.value;
+        recognition.lang = "en-US";
+        
+        selector.addEventListener("change", function(){
+          var selectedLang = this.value;
+          console.log(selectedLang);
+          if (selectedLang == "English"){
+            recognition.lang = "en-US";
+          }
+          if (selectedLang == "Chinese"){
+            recognition.lang = "zh-TW";
+          }
+          if (selectedLang == "Japanese"){
+            recognition.lang = "ja";
+          }
+          if (selectedLang == "German"){
+            recognition.lang = "de";
+          }
+          if (selectedLang == "French"){
+            recognition.lang = "fr";
+          }
+          if (selectedLang == "Italian"){
+            recognition.lang = "it";
+          }
+          if (selectedLang == "Spanish"){
+            recognition.lang = "es";
+          }
+        });
+        
+        
+
+        const startButton = document.getElementById('speachBtn');
+        const outputDiv = document.getElementById('output');
+        const taskInput = document.getElementById('taskInput');
+        const talkBtn = document.getElementById('talkBtn');
+        recognition.onstart = () => {
+            startButton.textContent = 'Listening...';
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            taskInput.value = transcript;
+            talkBtn.click();
+            // outputDiv.textContent = transcript;
+        };
+
+        recognition.onend = () =>{
+          startButton.textContent = 'Start Voice Input';
+        };
+
+        startButton.addEventListener('click', () =>{
+          recognition.start();
+        });
+
+        addEventListener("keydown", function(e){;
+
+          //checks if Wayne is on screen
+          if(document.getElementById("badcode").innerHTML=="playing"){
+            //lets user start talking by pressing the "s" key
+            if(e.key == "1"){
+              recognition.start();
+            }
+
+            //lets user hide the status bar by pressing the "h" key
+            if(e.key == "2"){
+            var statusBlock = document.getElementById("statusBlock");
+            var leftButtons = document.getElementById("leftButtons");
+            if (statusBlock.style.display !="none" && leftButtons.style.display !="none"){
+              statusBlock.style.display = "none";
+              leftButtons.style.display = "none";
+            }
+            else{
+              statusBlock.style.display = "flex";
+              leftButtons.style.display = "initial";
+            }
+          }
+          };
+        });
+
+
+
+        // document.getElementById("changepage").addEventListener("click", function(){
+        //   if(document.getElementById("main").style.display != "none"){
+        //     document.getElementById("main").style.display="none";
+        //     document.getElementById("results").style.display="initial";
+        //   }
+        //   else{
+        //     document.getElementById("main").style.display="initial";
+        //     document.getElementById("results").style.display="none";
+            
+        //   }
+        // });
+
+    </script>
   </body>
 </html>

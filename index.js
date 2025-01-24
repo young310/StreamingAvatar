@@ -1,7 +1,7 @@
 'use strict';
 
 const heygen_API = {
-  apiKey: 'YourApiKey',
+  apiKey: '',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -16,8 +16,16 @@ if (apiKey === 'YourApiKey' || SERVER_URL === '') {
 let sessionInfo = null;
 let peerConnection = null;
 
+//create global array to store all the assistant's responses
+var responseArray = [];
+var responseCount = 0;
+// let subSentences = [];
+var userTrans = [];
+var compTrans = [];
+
 function updateStatus(statusElement, message) {
-  statusElement.innerHTML += message + '<br>';
+  //statusElement.innerHTML += message + '<br>';
+  statusElement.innerHTML = message;
   statusElement.scrollTop = statusElement.scrollHeight;
 }
 
@@ -36,7 +44,7 @@ async function createNewSession() {
   const voice = voiceID.value;
 
   // call the new interface to get the server's offer SDP and ICE server to create a new RTCPeerConnection
-  sessionInfo = await newSession('low', avatar, voice);
+  sessionInfo = await newSession('high', avatar, voice);
   const { sdp: serverSdp, ice_servers2: iceServers } = sessionInfo;
 
   // Create a new RTCPeerConnection
@@ -61,11 +69,14 @@ async function createNewSession() {
   await peerConnection.setRemoteDescription(remoteDescription);
 
   updateStatus(statusElement, 'Session creation completed');
-  updateStatus(statusElement, 'Now.You can click the start button to start the stream');
+  updateStatus(statusElement, 'Now. You can click the start button to start the stream');
 }
 
 // Start session and display audio and video when clicking the "Start" button
 async function startAndDisplaySession() {
+
+  document.getElementById("badcode").innerHTML = "playing";
+
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     return;
@@ -109,7 +120,7 @@ async function startAndDisplaySession() {
 
 const taskInput = document.querySelector('#taskInput');
 
-// When clicking the "Send Task" button, get the content from the input field, then send the tas
+// When clicking the "Send Task" button, get the content from the input field, then send the task
 async function repeatHandler() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -139,10 +150,21 @@ async function talkHandler() {
     return;
   }
 
+  //adds the first user prompt into the user transcription array
+  if(userTrans.length == 0){
+    userTrans.push(prompt);
+  }
+
   updateStatus(statusElement, 'Talking to LLM... please wait');
 
   try {
     const text = await talkToOpenAI(prompt)
+
+    //checks if the text if JSON, and forcefully ends if the connection
+    if (text.charAt(0) == "{"){
+      closeConnectionHandler();
+      return;
+    }
 
     if (text) {
       // Send the AI's response to Heygen's streaming.task API
@@ -151,6 +173,55 @@ async function talkHandler() {
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
     }
+
+    // displays subtitles and changes sentences based on sentence length
+    // let subs = document.getElementById("subs");
+    
+    // let timeCounter = 0;
+    // for(let i = 0; i < subSentences.length; i++){
+
+    //   if(i == 0){
+    //     timeCounter += 0;
+    //   }
+    //   else{
+    //     let lang = document.getElementById("languageDrop").value;
+    //     let wordCounter =[];
+    //     if (lang == "Chinese" || lang == "Japanese"){
+    //       wordCounter = subSentences[i-1].split("");
+    //     }
+    //     else{
+    //       wordCounter = subSentences[i-1].split(" ");
+    //     }
+
+    //     console.log(wordCounter)
+        
+    //     if (wordCounter.length <= 2){
+    //       timeCounter += 1000;
+    //     }
+    //     else if (wordCounter.length > 2 && wordCounter.length <= 10){
+    //       timeCounter += 3000;
+    //     }
+    //     else if (wordCounter.length > 10 && wordCounter.length <= 18){
+    //       timeCounter += 6000;
+    //     }
+    //     else if (wordCounter.length > 18 && wordCounter.length <= 26){
+    //       timeCounter += 9000;
+    //     }
+    //     else if (wordCounter.length > 26 && wordCounter.length <= 34){
+    //       timeCounter += 12000;
+    //     }
+    //     else{
+    //       timeCounter += 15000;
+    //     }
+    //   }
+
+    //   setTimeout(() =>{
+    //     subs.innerHTML = subSentences[i];
+    //   }, timeCounter)
+    // }
+    // subs.innerHTML = "";
+    
+
   } catch (error) {
     console.error('Error talking to AI:', error);
     updateStatus(statusElement, 'Error talking to AI');
@@ -160,14 +231,17 @@ async function talkHandler() {
 
 // when clicking the "Close" button, close the connection
 async function closeConnectionHandler() {
+
+  document.getElementById("badcode").innerHTML = "not playing";
+
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     return;
   }
 
   renderID++;
-  hideElement(canvasElement);
-  hideElement(bgCheckboxWrap);
+  // hideElement(canvasElement);
+  // hideElement(bgCheckboxWrap);
   mediaCanPlay = false;
 
   updateStatus(statusElement, 'Closing connection... please wait');
@@ -182,6 +256,48 @@ async function closeConnectionHandler() {
     console.error('Failed to close the connection:', err);
   }
   updateStatus(statusElement, 'Connection closed successfully');
+
+
+
+  //code for creating the results page starts here
+
+  //hide original interface
+  document.getElementById("main").style.display="none";
+  document.getElementById("results").style.display="initial";
+  // document.getElementById("subs").innerHTML = "";
+
+  let responseJSON = JSON.parse(responseArray[responseCount-1]);
+
+  document.getElementById("candidateName").innerHTML = responseJSON.user.name;
+  document.getElementById("role").innerHTML = "Job Title: " + responseJSON.user.job_title;
+  document.getElementById("summary").innerHTML = responseJSON.conversation.summary;
+ 
+  document.getElementById("problem").innerHTML = responseJSON.insights.problem_solving;
+  document.getElementById("decision").innerHTML = responseJSON.insights.decision_making;
+  document.getElementById("team").innerHTML = responseJSON.insights.team_dynamics;
+  document.getElementById("customer").innerHTML = responseJSON.insights.customer_handling;
+  document.getElementById("traits").innerHTML = responseJSON.insights.important_traits;
+  document.getElementById("tips").innerHTML = responseJSON.insights.industry_tips;
+
+  let bullets = responseJSON.conversation.bullet_points;
+  for(let i = 0; i < bullets.length; i++){
+    document.getElementById("bullets").appendChild(document.createElement("li"));
+    document.getElementById("bullets").lastChild.innerHTML = bullets[i];
+  }
+  
+  //stores the transcript into arrays
+  let transcript = responseJSON.conversation.transcription.split("\n");
+
+  for(let i = 0; i < transcript.length; i++){
+    if (transcript[i].substring(0, 9) == "Assistant"){
+      compTrans.push(transcript[i]);
+    }
+    else{
+      userTrans.push(transcript[i]);
+    }
+  }
+
+
 }
 
 document.querySelector('#newBtn').addEventListener('click', createNewSession);
@@ -285,6 +401,22 @@ async function talkToOpenAI(prompt) {
     throw new Error('Server error');
   } else {
     const data = await response.json();
+
+    //puts all the responses into an array I can use elsewhere
+    responseArray.push(data.text);
+    responseCount = responseCount + 1;
+    console.log(data.text);
+
+    //does subtitle stuff
+    // subSentences = [];
+    // let cutoff = 0;
+    // for(let i = 0; i < data.text.length; i++){
+    //   if (data.text.charAt(i) == "!" || data.text.charAt(i) == "." || data.text.charAt(i) == "?" || data.text.charAt(i) =="！" || data.text.charAt(i) == "？" || data.text.charAt(i) == "。" ){
+    //     subSentences.push(data.text.substring(cutoff, i));
+    //     cutoff = i+1;
+    //   }
+    // }
+
     return data.text;
   }
 }
@@ -332,6 +464,7 @@ async function stopSession(session_id) {
   }
 }
 
+/*
 const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
 removeBGCheckbox.addEventListener('click', () => {
   const isChecked = removeBGCheckbox.checked; // status after click
@@ -360,6 +493,7 @@ removeBGCheckbox.addEventListener('click', () => {
     renderID++;
   }
 });
+*/
 
 let renderID = 0;
 function renderCanvas() {
@@ -430,14 +564,5 @@ mediaElement.onloadedmetadata = () => {
   mediaCanPlay = true;
   mediaElement.play();
 
-  showElement(bgCheckboxWrap);
+  // showElement(bgCheckboxWrap);
 };
-const canvasElement = document.querySelector('#canvasElement');
-
-const bgCheckboxWrap = document.querySelector('#bgCheckboxWrap');
-const bgInput = document.querySelector('#bgInput');
-bgInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    renderCanvas();
-  }
-});

@@ -1,7 +1,7 @@
 'use strict';
 
 const heygen_API = {
-  apiKey: '',
+  apiKey: 'ZTgyMzdiZDM5YzBhNGI0YThiYjY2YTUzMGY0OGU3YzUtMTczNDYwMDQ2Mg==',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -160,10 +160,15 @@ async function talkHandler() {
   try {
     const text = await talkToOpenAI(prompt)
 
-    //checks if the text if JSON, and forcefully ends if the connection
-    if (text.charAt(0) == "{"){
-      closeConnectionHandler();
-      return;
+    //checks if any part of the text is JSON, and forcefully ends if the connection
+    for(let i = 0; i < text.length; i++){
+      if (text.charAt(i) == "{"){
+        closeConnectionHandler();
+        let jsonStart = text.indexOf("{");
+        let jsonEnd = text.lastIndexOf("}");
+        responseArray[responseCount-1] = text.substring(jsonStart, jsonEnd+1);
+        return;
+      }
     }
 
     if (text) {
@@ -266,6 +271,7 @@ async function closeConnectionHandler() {
   document.getElementById("results").style.display="initial";
   // document.getElementById("subs").innerHTML = "";
 
+  console.log(responseArray[responseCount-1]);
   let responseJSON = JSON.parse(responseArray[responseCount-1]);
 
   document.getElementById("candidateName").innerHTML = responseJSON.user.name;
@@ -286,16 +292,16 @@ async function closeConnectionHandler() {
   }
   
   //stores the transcript into arrays
-  let transcript = responseJSON.conversation.transcription.split("\n");
+  //let transcript = responseJSON.conversation.transcription.split("\n");
 
-  for(let i = 0; i < transcript.length; i++){
-    if (transcript[i].substring(0, 9) == "Assistant"){
-      compTrans.push(transcript[i]);
-    }
-    else{
-      userTrans.push(transcript[i]);
-    }
-  }
+  // for(let i = 0; i < transcript.length; i++){
+  //   if (transcript[i].substring(0, 9) == "Assistant"){
+  //     compTrans.push(transcript[i]);
+  //   }
+  //   else{
+  //     userTrans.push(transcript[i]);
+  //   }
+  // }
 
 
 }

@@ -21,6 +21,7 @@
           <button id="startBtn">Start</button>
           <button id="closeBtn">Close</button>
           <button id="speachBtn">Speech</button>
+          <button id="endSpeech">End Speech</button>
         </div>
 
         <div id="statusBlock">
@@ -77,7 +78,7 @@
               <div class="sumBlurb">
                   <p id="summary">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
               </div>
-              <img src="https://uxwing.com/wp-content/themes/uxwing/download/household-and-furniture/light-bulb-color-icon.png">
+              <img src="https://icon-library.com/images/insight-icon/insight-icon-3.jpg">
               <div class="sumBlurb">
                 <h3>Key Insights</h3>
                 <ul id="bullets">
@@ -123,7 +124,10 @@
         var selector = document.getElementById("languageDrop");
         var selectedLang = selector.value;
         recognition.lang = "en-US";
-        
+        var speechStarted = false;
+        recognition.continuous = true;
+        var transStore = [];
+
         selector.addEventListener("change", function(){
           var selectedLang = this.value;
           console.log(selectedLang);
@@ -156,24 +160,40 @@
         const outputDiv = document.getElementById('output');
         const taskInput = document.getElementById('taskInput');
         const talkBtn = document.getElementById('talkBtn');
+        const endBtn = document.getElementById('endSpeech');
         recognition.onstart = () => {
             startButton.textContent = 'Listening...';
         };
 
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            taskInput.value = transcript;
-            talkBtn.click();
+            const transcript = event.results[event.resultIndex][0].transcript;
+            transStore.push(transcript);
             // outputDiv.textContent = transcript;
         };
 
         recognition.onend = () =>{
           startButton.textContent = 'Start Voice Input';
+          let allTrans = "";
+          for(let i = 0; i < transStore.length; i++){
+            allTrans += transStore[i];
+          }
+          taskInput.value = allTrans;
+          talkBtn.click();
+          console.log(allTrans);
+          transStore = []
         };
 
         startButton.addEventListener('click', () =>{
           recognition.start();
+          endBtn.style.display = "initial";
         });
+
+        endBtn.addEventListener('click', ()=>{
+          recognition.stop();
+          endBtn.style.display = "none";
+        })
+
+
 
         // addEventListener("keydown", function(e){;
 

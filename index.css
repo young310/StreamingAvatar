@@ -57,6 +57,14 @@ button:hover{
     left: 1vw;
 }
 
+#endSpeech{
+    position: absolute;
+    top: 37vh;
+    left: 1vw;
+    background-color: red;
+    display: none;
+}
+
 #statusBlock{
     position: absolute;
     height: auto;

@@ -57,64 +57,18 @@
             <p style="color: yellow;" id="status"></p>
             <div style="color: yellow;" id="output"></div>
         </div>
+        <label id="uploadBtn" for="fileUpload">Upload</label>
+        <input style="display: none;" type="file" name="fileUpload" id="fileUpload"/>
+    </div>
 
-        <div id="qrBlock">
-          <h1>Scan to access Deloitte's career website</h1>
-          <!-- <a id="resultsButton" href="results.html"></a> -->
-          <!-- <div id="qrCode"></div> -->
-        </div>
+    <div id="reportPop">
+
+      <button id="download">Download Report</button>
+      <button id="closeReport">Close</button>
     </div>
 
 
-    <div id="results">
-      <header id="reportHeader">
-        <h1 id="candidateName">Chicken Nuggets</h1>
-      </header>
-
-      <div id="reportMain">
-          <div id="sumBox">
-              <h2>Summary</h2>
-              <h3 id="role">Manager</h3>
-              <div class="sumBlurb">
-                  <p id="summary">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
-              </div>
-              <img src="https://icon-library.com/images/insight-icon/insight-icon-3.jpg">
-              <div class="sumBlurb">
-                <h3>Key Insights</h3>
-                <ul id="bullets">
-                </ul>
-              </div>
-          </div>
-      
-          <div id="paramBoxes">
-              <div class="param">
-                <h2 id="eduhead">Problem Solving</h2>
-                <p id="problem">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                <h2 id="workhead">Decision Making</h2>
-                <p  id="decision">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                  <h2 id="techhead">Team Dynamics</h2>
-                  <p  id="team">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                  <h2 id="softhead">Customer Handling</h2>
-                  <p id="customer">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                  <h2 id="behhead">Important Traits</h2>
-                  <p id="traits">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                <h2 id="sumhead">Industry Tips</h2>
-                <p id="tips">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>   
-          </div>
-        </div>
-    </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
     <script type="module" src="index.js"></script>
     <!-- <script type="module" src="qrcode.js"></script> -->
     <script>
@@ -161,6 +115,7 @@
         const taskInput = document.getElementById('taskInput');
         const talkBtn = document.getElementById('talkBtn');
         const endBtn = document.getElementById('endSpeech');
+        const reportBlock = document.getElementById("reportPop");
         recognition.onstart = () => {
             startButton.textContent = 'Listening...';
         };
@@ -194,45 +149,109 @@
         })
 
 
+        // deals with converting uploaded pdf to text and sending it out
+        // Set workerSrc for PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
 
-        // addEventListener("keydown", function(e){;
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                  var pdfData = new Uint8Array(event.target.result);
 
-        //   //checks if Wayne is on screen
-        //   if(document.getElementById("badcode").innerHTML=="playing"){
-        //     //lets user start talking by pressing the "s" key
-        //     if(e.key == "1"){
-        //       recognition.start();
-        //     }
+                  pdfjsLib.getDocument(pdfData).promise.then(function(pdf) {
+                      var totalPages = pdf.numPages;
+                      var fullText = ''; // To collect the full text
+                      var currentPage = 1;
 
-        //     //lets user hide the status bar by pressing the "h" key
-        //     if(e.key == "2"){
-        //     var statusBlock = document.getElementById("statusBlock");
-        //     var leftButtons = document.getElementById("leftButtons");
-        //     if (statusBlock.style.display !="none" && leftButtons.style.display !="none"){
-        //       statusBlock.style.display = "none";
-        //       leftButtons.style.display = "none";
-        //     }
-        //     else{
-        //       statusBlock.style.display = "flex";
-        //       leftButtons.style.display = "initial";
-        //     }
-        //   }
-        //   };
-        // });
+                      // Function to extract text from a single page
+                      function extractTextFromPage(pageNum) {
+                          pdf.getPage(pageNum).then(function(page) {
+                            page.getTextContent().then(function(text) {
+                                text.items.forEach(function(item) {
+                                    fullText += item.str + ' '; // Append page text to fullText
+                                });
+                                // If there are more pages, process the next page
+                                if (currentPage < totalPages) {
+                                    currentPage++;
+                                    extractTextFromPage(currentPage); // Process next page
+                                } 
+                                else {
+                                  taskInput.value = "Read through this file: " + fullText + ". During report generating, only reference the structure of the file, not the contents. Otherwise, gain understanding on entire report contents.";
+                                  talkBtn.click();
+
+                                  // After all pages are processed, send the full text to Node.js server
+                                  // sendToServer(fullText);
+                                }
+                              });
+                          });
+                        }
+
+                        // Start extracting text from the first page
+                        extractTextFromPage(currentPage);
+
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
 
 
 
-        // document.getElementById("changepage").addEventListener("click", function(){
-        //   if(document.getElementById("main").style.display != "none"){
-        //     document.getElementById("main").style.display="none";
-        //     document.getElementById("results").style.display="initial";
-        //   }
-        //   else{
-        //     document.getElementById("main").style.display="initial";
-        //     document.getElementById("results").style.display="none";
-            
-        //   }
-        // });
+        //stuff for download button
+        document.getElementById("download").addEventListener("click", downloadContent);
+
+        function downloadContent() {
+            // Get the content of the div
+            var content = document.getElementById('reportPop').firstElementChild.innerHTML;
+
+            // Create a blob with the content
+            var blob = new Blob([content], { type: 'text/html' });
+
+            // Create an anchor element to simulate the download
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'content.html'; // The name of the downloaded file
+
+            // Trigger the download by clicking the link
+            link.click();
+        }
+
+        //stuff for close report button
+        document.getElementById("closeReport").addEventListener("click", ()=>{
+          reportBlock.style.display = "none";
+        })
+
+        addEventListener("keydown", function(e){;
+          //checks if Wayne is on screen
+          if(document.getElementById("badcode").innerHTML=="playing"){
+            //lets user start talking by pressing the "1" key
+            if(e.key == "1"){
+              startbutton.click();
+            }
+
+            //lets user stop talking by pressing the "2" key
+            if(e.key == "2"){
+              endBtn.click();
+            }
+
+            //lets user hide the status bar by pressing the "3" key
+            if(e.key == "3"){
+            var statusBlock = document.getElementById("statusBlock");
+            var leftButtons = document.getElementById("leftButtons");
+            if (statusBlock.style.display !="none" && leftButtons.style.display !="none"){
+              statusBlock.style.display = "none";
+              leftButtons.style.display = "none";
+            }
+            else{
+              statusBlock.style.display = "flex";
+              leftButtons.style.display = "initial";
+            }
+          }
+          };
+        });
+
 
     </script>
   </body>

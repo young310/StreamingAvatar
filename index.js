@@ -19,7 +19,6 @@ let peerConnection = null;
 //create global array to store all the assistant's responses
 var responseArray = [];
 var responseCount = 0;
-// let subSentences = [];
 var userTrans = [];
 var compTrans = [];
 
@@ -76,6 +75,8 @@ async function createNewSession() {
 async function startAndDisplaySession() {
 
   document.getElementById("badcode").innerHTML = "playing";
+  //display upload button
+  document.getElementById("uploadBtn").style.display = "flex";
 
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -160,71 +161,40 @@ async function talkHandler() {
   try {
     const text = await talkToOpenAI(prompt)
 
-    //checks if any part of the text is JSON, and forcefully ends if the connection
-    for(let i = 0; i < text.length; i++){
-      if (text.charAt(i) == "{"){
-        closeConnectionHandler();
-        let jsonStart = text.indexOf("{");
-        let jsonEnd = text.lastIndexOf("}");
-        responseArray[responseCount-1] = text.substring(jsonStart, jsonEnd+1);
-        return;
-      }
-    }
-
     if (text) {
+
+      let ifHeygen = text;
+
+      //checks if any part of the text is HTML, and gets heygen to say things that aren't the HTML
+      for(let i = 0; i < text.length; i++){
+        if (text.charAt(i) == "<"){
+          let htmlStart = text.indexOf("<");
+          let htmlEnd = text.lastIndexOf(">");
+          responseArray[responseCount-1] = text.substring(htmlStart, htmlEnd+1);
+          ifHeygen = text.substring(0, text.indexOf("<"));
+          
+        }
+      }
+
+      //checks if there's an existing report and remove it if there is.
+      let reportBlock = document.getElementById("reportPop");
+      if(reportBlock.firstElementChild.tagName == "DIV"){
+        reportBlock.removeChild(reportBlock.firstElementChild);
+      }
+
+      //adds report into the div
+      if(ifHeygen != text){
+        reportBlock.insertAdjacentHTML("afterbegin", responseArray[responseCount-1]);
+        reportBlock.style.display="flex";
+      }
+
+
       // Send the AI's response to Heygen's streaming.task API
-      const resp = await repeat(sessionInfo.session_id, text);
+      const resp = await repeat(sessionInfo.session_id, ifHeygen);
       updateStatus(statusElement, 'LLM response sent successfully');
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
     }
-
-    // displays subtitles and changes sentences based on sentence length
-    // let subs = document.getElementById("subs");
-    
-    // let timeCounter = 0;
-    // for(let i = 0; i < subSentences.length; i++){
-
-    //   if(i == 0){
-    //     timeCounter += 0;
-    //   }
-    //   else{
-    //     let lang = document.getElementById("languageDrop").value;
-    //     let wordCounter =[];
-    //     if (lang == "Chinese" || lang == "Japanese"){
-    //       wordCounter = subSentences[i-1].split("");
-    //     }
-    //     else{
-    //       wordCounter = subSentences[i-1].split(" ");
-    //     }
-
-    //     console.log(wordCounter)
-        
-    //     if (wordCounter.length <= 2){
-    //       timeCounter += 1000;
-    //     }
-    //     else if (wordCounter.length > 2 && wordCounter.length <= 10){
-    //       timeCounter += 3000;
-    //     }
-    //     else if (wordCounter.length > 10 && wordCounter.length <= 18){
-    //       timeCounter += 6000;
-    //     }
-    //     else if (wordCounter.length > 18 && wordCounter.length <= 26){
-    //       timeCounter += 9000;
-    //     }
-    //     else if (wordCounter.length > 26 && wordCounter.length <= 34){
-    //       timeCounter += 12000;
-    //     }
-    //     else{
-    //       timeCounter += 15000;
-    //     }
-    //   }
-
-    //   setTimeout(() =>{
-    //     subs.innerHTML = subSentences[i];
-    //   }, timeCounter)
-    // }
-    // subs.innerHTML = "";
     
 
   } catch (error) {
@@ -238,6 +208,8 @@ async function talkHandler() {
 async function closeConnectionHandler() {
 
   document.getElementById("badcode").innerHTML = "not playing";
+  //hides upload button
+  document.getElementById("uploadBtn").style.display = "none";
 
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -261,48 +233,6 @@ async function closeConnectionHandler() {
     console.error('Failed to close the connection:', err);
   }
   updateStatus(statusElement, 'Connection closed successfully');
-
-
-
-  //code for creating the results page starts here
-
-  //hide original interface
-  document.getElementById("main").style.display="none";
-  document.getElementById("results").style.display="initial";
-  // document.getElementById("subs").innerHTML = "";
-
-  console.log(responseArray[responseCount-1]);
-  let responseJSON = JSON.parse(responseArray[responseCount-1]);
-
-  document.getElementById("candidateName").innerHTML = responseJSON.user.name;
-  document.getElementById("role").innerHTML = "Job Title: " + responseJSON.user.job_title;
-  document.getElementById("summary").innerHTML = responseJSON.conversation.summary;
- 
-  document.getElementById("problem").innerHTML = responseJSON.insights.problem_solving;
-  document.getElementById("decision").innerHTML = responseJSON.insights.decision_making;
-  document.getElementById("team").innerHTML = responseJSON.insights.team_dynamics;
-  document.getElementById("customer").innerHTML = responseJSON.insights.customer_handling;
-  document.getElementById("traits").innerHTML = responseJSON.insights.important_traits;
-  document.getElementById("tips").innerHTML = responseJSON.insights.industry_tips;
-
-  let bullets = responseJSON.conversation.bullet_points;
-  for(let i = 0; i < bullets.length; i++){
-    document.getElementById("bullets").appendChild(document.createElement("li"));
-    document.getElementById("bullets").lastChild.innerHTML = bullets[i];
-  }
-  
-  //stores the transcript into arrays
-  //let transcript = responseJSON.conversation.transcription.split("\n");
-
-  // for(let i = 0; i < transcript.length; i++){
-  //   if (transcript[i].substring(0, 9) == "Assistant"){
-  //     compTrans.push(transcript[i]);
-  //   }
-  //   else{
-  //     userTrans.push(transcript[i]);
-  //   }
-  // }
-
 
 }
 
@@ -413,15 +343,6 @@ async function talkToOpenAI(prompt) {
     responseCount = responseCount + 1;
     console.log(data.text);
 
-    //does subtitle stuff
-    // subSentences = [];
-    // let cutoff = 0;
-    // for(let i = 0; i < data.text.length; i++){
-    //   if (data.text.charAt(i) == "!" || data.text.charAt(i) == "." || data.text.charAt(i) == "?" || data.text.charAt(i) =="！" || data.text.charAt(i) == "？" || data.text.charAt(i) == "。" ){
-    //     subSentences.push(data.text.substring(cutoff, i));
-    //     cutoff = i+1;
-    //   }
-    // }
 
     return data.text;
   }
@@ -470,36 +391,6 @@ async function stopSession(session_id) {
   }
 }
 
-/*
-const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
-removeBGCheckbox.addEventListener('click', () => {
-  const isChecked = removeBGCheckbox.checked; // status after click
-
-  if (isChecked && !sessionInfo) {
-    updateStatus(statusElement, 'Please create a connection first');
-    removeBGCheckbox.checked = false;
-    return;
-  }
-
-  if (isChecked && !mediaCanPlay) {
-    updateStatus(statusElement, 'Please wait for the video to load');
-    removeBGCheckbox.checked = false;
-    return;
-  }
-
-  if (isChecked) {
-    hideElement(mediaElement);
-    showElement(canvasElement);
-
-    renderCanvas();
-  } else {
-    hideElement(canvasElement);
-    showElement(mediaElement);
-
-    renderID++;
-  }
-});
-*/
 
 let renderID = 0;
 function renderCanvas() {

@@ -1,8 +1,12 @@
 * {
     padding: 0;
     margin: 0;
+    padding: 0;
+    margin: 0;
+    font-family: "Inter";
+    font-size: 1vw;
+    font-weight: 400;
   }
-  
 
 .bigVid{
     position: absolute;
@@ -67,23 +71,45 @@ button:hover{
 
 #uploadBtn{
     position: absolute;
-    display: none;
-    top: 50vh;
-    left: 85vw;
-    background-color: rgb(163, 106, 0);
+    top: 46vh;
+    left: 1vw;
+    background-color: rgb(178, 138, 7);
+}
+
+#uploadTitle{
+    font-size: 1.1em; 
+    font-weight: bold;
+    padding-top: 2vh;
+    padding-bottom: 2vh;
+}
+
+#pdfContainer{
+    width: 90%; 
+    border: 1px solid #ccc; 
+    height: 80%;
+    overflow-y: scroll;
+}
+
+#closeUpload{
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 9vw;
     height: 5vh;
     border-radius: 1vw;
+
+    background-color: red;
     border: none;
 
     color: #fff;
-    justify-content: center;
-    align-items: center;
-    font-family: "Inter";
     font-size: 1.1vw;
 
     cursor: pointer;
     transition-duration: 0.4s;
+}
+
+#closeUpload:hover{
+    background-color: rgb(224, 0, 0);
 }
 
 #statusBlock{
@@ -133,14 +159,14 @@ input{
     left: 50%;
     transform: translate(-50%, -50%);
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
     padding: 2vh;
     text-align: center;
     gap: 2vh;
 
-    width: 30vw;
-    height: 60vh;
+    width: 50vw;
+    height: 80vh;
     background-color: white;
     border-style: solid;
     border-color: black;
@@ -151,45 +177,14 @@ input{
     font-size: 1.6em;
 }
 
-#reportPop{
+
+#subs{
     position: absolute;
-    top: 2vh;
-    left: 1vw;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    width: 40vw;
-    max-height: 90vh;
-    padding: 1vh;
-    font-size: 0.8em;
-    overflow-y: scroll;
-    background-color: white;
-    border-style: solid;
-    border-width: 0.5px;
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
-
-#download{
-    margin-top: 1vh;
-    width: 10vw;
-    height: 6vh;
-    background-color: white;
-    border-style: solid;
-    color: black;
-    border-width: 0.5px;
-}
-
-#download:hover{
-    background-color: rgb(224, 224, 224);
-}
-
-#closeReport{
-    margin-top: 1vh;
-    height: 6vh;
-    background-color: red;
-}
-
-#closeReport:hover{
-    background-color: rgb(210, 0, 0);
+    top: 85%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    color: white;
+    font-size: 2em;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }

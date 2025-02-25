@@ -22,6 +22,7 @@
           <button id="closeBtn">Close</button>
           <button id="speachBtn">Speech</button>
           <button id="endSpeech">End Speech</button>
+          <button id="uploadBtn">Upload File</button>
         </div>
 
         <div id="statusBlock">
@@ -57,202 +58,20 @@
             <p style="color: yellow;" id="status"></p>
             <div style="color: yellow;" id="output"></div>
         </div>
-        <label id="uploadBtn" for="fileUpload">Upload</label>
-        <input style="display: none;" type="file" name="fileUpload" id="fileUpload"/>
+
+        <form id="uploadBlock" method="post" action="/openai/upload" enctype="multipart/form-data">
+          <label id="uploadTitle" for="formatfile">Choose File to Upload</label>
+          <div id="pdfContainer">
+            <!-- The extracted text will be displayed here -->
+          </div>
+          <input id="formatfile" type="file" name="file"/>
+          <button id="otherUpload" type="submit">Upload</button>
+          <div id="closeUpload">Close</div>
+        </form>
     </div>
-
-    <div id="reportPop">
-
-      <button id="download">Download Report</button>
-      <button id="closeReport">Close</button>
-    </div>
-
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
     <script type="module" src="index.js"></script>
     <!-- <script type="module" src="qrcode.js"></script> -->
-    <script>
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
-        
-        //determines recognition language based on dropdown selection
-        var selector = document.getElementById("languageDrop");
-        var selectedLang = selector.value;
-        recognition.lang = "en-US";
-        var speechStarted = false;
-        recognition.continuous = true;
-        var transStore = [];
-
-        selector.addEventListener("change", function(){
-          var selectedLang = this.value;
-          console.log(selectedLang);
-          if (selectedLang == "English"){
-            recognition.lang = "en-US";
-          }
-          if (selectedLang == "Chinese"){
-            recognition.lang = "zh-TW";
-          }
-          if (selectedLang == "Japanese"){
-            recognition.lang = "ja";
-          }
-          if (selectedLang == "German"){
-            recognition.lang = "de";
-          }
-          if (selectedLang == "French"){
-            recognition.lang = "fr";
-          }
-          if (selectedLang == "Italian"){
-            recognition.lang = "it";
-          }
-          if (selectedLang == "Spanish"){
-            recognition.lang = "es";
-          }
-        });
-        
-        
-
-        const startButton = document.getElementById('speachBtn');
-        const outputDiv = document.getElementById('output');
-        const taskInput = document.getElementById('taskInput');
-        const talkBtn = document.getElementById('talkBtn');
-        const endBtn = document.getElementById('endSpeech');
-        const reportBlock = document.getElementById("reportPop");
-        recognition.onstart = () => {
-            startButton.textContent = 'Listening...';
-        };
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[event.resultIndex][0].transcript;
-            transStore.push(transcript);
-            // outputDiv.textContent = transcript;
-        };
-
-        recognition.onend = () =>{
-          startButton.textContent = 'Start Voice Input';
-          let allTrans = "";
-          for(let i = 0; i < transStore.length; i++){
-            allTrans += transStore[i];
-          }
-          taskInput.value = allTrans;
-          talkBtn.click();
-          console.log(allTrans);
-          transStore = []
-        };
-
-        startButton.addEventListener('click', () =>{
-          recognition.start();
-          endBtn.style.display = "initial";
-        });
-
-        endBtn.addEventListener('click', ()=>{
-          recognition.stop();
-          endBtn.style.display = "none";
-        })
-
-
-        // deals with converting uploaded pdf to text and sending it out
-        // Set workerSrc for PDF.js
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
-
-        document.getElementById('fileUpload').addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(event) {
-                  var pdfData = new Uint8Array(event.target.result);
-
-                  pdfjsLib.getDocument(pdfData).promise.then(function(pdf) {
-                      var totalPages = pdf.numPages;
-                      var fullText = ''; // To collect the full text
-                      var currentPage = 1;
-
-                      // Function to extract text from a single page
-                      function extractTextFromPage(pageNum) {
-                          pdf.getPage(pageNum).then(function(page) {
-                            page.getTextContent().then(function(text) {
-                                text.items.forEach(function(item) {
-                                    fullText += item.str + ' '; // Append page text to fullText
-                                });
-                                // If there are more pages, process the next page
-                                if (currentPage < totalPages) {
-                                    currentPage++;
-                                    extractTextFromPage(currentPage); // Process next page
-                                } 
-                                else {
-                                  taskInput.value = "Read through this file: " + fullText + ". During report generating, only reference the structure of the file, not the contents. Otherwise, gain understanding on entire report contents.";
-                                  talkBtn.click();
-
-                                  // After all pages are processed, send the full text to Node.js server
-                                  // sendToServer(fullText);
-                                }
-                              });
-                          });
-                        }
-
-                        // Start extracting text from the first page
-                        extractTextFromPage(currentPage);
-
-                    });
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        });
-
-
-
-        //stuff for download button
-        document.getElementById("download").addEventListener("click", downloadContent);
-
-        function downloadContent() {
-            // Get the content of the div
-            var content = document.getElementById('reportPop').firstElementChild.innerHTML;
-
-            // Create a blob with the content
-            var blob = new Blob([content], { type: 'text/html' });
-
-            // Create an anchor element to simulate the download
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'content.html'; // The name of the downloaded file
-
-            // Trigger the download by clicking the link
-            link.click();
-        }
-
-        //stuff for close report button
-        document.getElementById("closeReport").addEventListener("click", ()=>{
-          reportBlock.style.display = "none";
-        })
-
-        addEventListener("keydown", function(e){;
-          //checks if Wayne is on screen
-          if(document.getElementById("badcode").innerHTML=="playing"){
-            //lets user start talking by pressing the "1" key
-            if(e.key == "1"){
-              startbutton.click();
-            }
-
-            //lets user stop talking by pressing the "2" key
-            if(e.key == "2"){
-              endBtn.click();
-            }
-
-            //lets user hide the status bar by pressing the "3" key
-            if(e.key == "3"){
-            var statusBlock = document.getElementById("statusBlock");
-            var leftButtons = document.getElementById("leftButtons");
-            if (statusBlock.style.display !="none" && leftButtons.style.display !="none"){
-              statusBlock.style.display = "none";
-              leftButtons.style.display = "none";
-            }
-            else{
-              statusBlock.style.display = "flex";
-              leftButtons.style.display = "initial";
-            }
-          }
-          };
-        });
-
-
-    </script>
   </body>
 </html>

@@ -1,69 +1,83 @@
 <!doctype html>
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="index.css" />
     <link rel="icon" href="./favicon.ico" />
+
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/sql.js"></script>
   </head>
 
   <body>
-    <div class="main">
-      <div class="actionRowsWrap">
-        <div class="actionRow">
-          <label>
-            AvatarID
-            <input id="avatarID" type="text" />
-          </label>
-
-          <label>
-            VoiceID
-            <input id="voiceID" type="text" />
-          </label>
-
+    <!-- <button id="changepage">changepage</button> -->
+    <p id="subs"></p>
+    <div id="main">
+        <p style="display:none;" id="badcode">beginning</p>
+        <video class="bigVid" id="mediaElement" autoplay></video>
+        <div id="leftButtons">
           <button id="newBtn">New</button>
           <button id="startBtn">Start</button>
           <button id="closeBtn">Close</button>
+          <button id="speachBtn">Speech</button>
+          <button id="endSpeech">End Speech</button>
+          <button id="uploadBtn">Upload File</button>
         </div>
 
-        <div class="actionRow">
-          <label>
-            Message
-            <input id="taskInput" type="text" />
-          </label>
-          <button id="repeatBtn">Repeat</button>
-          <button id="talkBtn">Talk</button>
-
-        </div>
-      </div>
-
-      <p id="status"></p>
-
-      <div class="videoSectionWrap">
-        <div class="videoWrap">
-          <video id="mediaElement" class="videoEle show" autoplay></video>
-          <canvas id="canvasElement" class="videoEle hide"></canvas>
-        </div>
-
-        <div class="actionRow switchRow hide" id="bgCheckboxWrap">
-          <div class="switchWrap">
-            <span>Remove background</span>
-            <label class="switch">
-              <input type="checkbox" id="removeBGCheckbox" />
-              <span class="slider round"></span>
+        <div id="statusBlock">
+            <label>
+                AvatarID
+                <input id="avatarID" type="text" value="Wayne_20240711"/>
             </label>
-          </div>
+    
+            <label>
+                VoiceID
+                <input id="voiceID" type="text" />
+            </label>
 
-          <label>
-            Background (CSS)
-            <input
-              type="text"
-              id="bgInput"
-              value='url("https://app.heygen.com/icons/heygen/logo_hori_text_light_bg.svg") center / contain no-repeat'
-            />
-          </label>
+            <label>
+                Language
+                <select style="width: 8vw;" name="languageDrop" id="languageDrop">
+                    <option value="English">English</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="German">German</option>
+                    <option value="French">French</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="Italian">Italian</option>
+                </select>
+            </label>  
+            <label>
+              Message
+              <input id="taskInput" type="text" />
+            </label>
+            <button id="repeatBtn">Repeat</button>
+            <button id="talkBtn">Talk</button>
+
+            <p style="color: yellow;" id="status"></p>
+            <div style="color: yellow;" id="output"></div>
         </div>
-      </div>
+
+        <form id="uploadBlock" method="post" action="/openai/upload" enctype="multipart/form-data">
+          <label id="uploadTitle" for="formatfile">Choose File to Upload</label>
+          <div id="pdfContainer">
+            <!-- The extracted text will be displayed here -->
+          </div>
+          <input id="formatfile" type="file" name="file"/>
+          <button id="otherUpload" type="submit">Upload</button>
+          <div id="closeUpload">Close</div>
+        </form>
+
+        <div id="reportPop">
+
+          <button id="download">Download Report</button>
+          <button id="closeReport">Close</button>
+        </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
     <script type="module" src="index.js"></script>
+    <!-- <script type="module" src="qrcode.js"></script> -->
   </body>
 </html>

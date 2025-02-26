@@ -1,7 +1,7 @@
 'use strict';
 
 const heygen_API = {
-  apiKey: 'YourApiKey',
+  apiKey: '',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -16,8 +16,16 @@ if (apiKey === 'YourApiKey' || SERVER_URL === '') {
 let sessionInfo = null;
 let peerConnection = null;
 
+// let subSentences = [];
+var userTrans = [];
+var compTrans = [];
+//create global array to store all the assistant's responses
+var responseArray = [];
+var responseCount = 0;
+
 function updateStatus(statusElement, message) {
-  statusElement.innerHTML += message + '<br>';
+  //statusElement.innerHTML += message + '<br>';
+  statusElement.innerHTML = message;
   statusElement.scrollTop = statusElement.scrollHeight;
 }
 
@@ -36,7 +44,7 @@ async function createNewSession() {
   const voice = voiceID.value;
 
   // call the new interface to get the server's offer SDP and ICE server to create a new RTCPeerConnection
-  sessionInfo = await newSession('low', avatar, voice);
+  sessionInfo = await newSession('high', avatar, voice);
   const { sdp: serverSdp, ice_servers2: iceServers } = sessionInfo;
 
   // Create a new RTCPeerConnection
@@ -61,11 +69,14 @@ async function createNewSession() {
   await peerConnection.setRemoteDescription(remoteDescription);
 
   updateStatus(statusElement, 'Session creation completed');
-  updateStatus(statusElement, 'Now.You can click the start button to start the stream');
+  updateStatus(statusElement, 'Now. You can click the start button to start the stream');
 }
 
 // Start session and display audio and video when clicking the "Start" button
 async function startAndDisplaySession() {
+
+  document.getElementById("badcode").innerHTML = "playing";
+
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     return;
@@ -109,7 +120,7 @@ async function startAndDisplaySession() {
 
 const taskInput = document.querySelector('#taskInput');
 
-// When clicking the "Send Task" button, get the content from the input field, then send the tas
+// When clicking the "Send Task" button, get the content from the input field, then send the task
 async function repeatHandler() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -139,18 +150,100 @@ async function talkHandler() {
     return;
   }
 
+  //adds the first user prompt into the user transcription array
+  if(userTrans.length == 0){
+    userTrans.push(prompt);
+  }
+
   updateStatus(statusElement, 'Talking to LLM... please wait');
 
   try {
     const text = await talkToOpenAI(prompt)
 
     if (text) {
+
+      let ifHeygen = text;
+
+      //checks if any part of the text is HTML, and gets heygen to say things that aren't the HTML
+      for(let i = 0; i < text.length; i++){
+        if (text.charAt(i) == "<"){
+          let htmlStart = text.indexOf("<");
+          let htmlEnd = text.lastIndexOf(">");
+          responseArray[responseCount-1] = text.substring(htmlStart, htmlEnd+1);
+          ifHeygen = text.substring(0, text.indexOf("<"));
+          
+        }
+      }
+
+      //checks if there's an existing report and remove it if there is.
+      let reportBlock = document.getElementById("reportPop");
+      if(reportBlock.firstElementChild.tagName == "SECTION"){
+        reportBlock.removeChild(reportBlock.firstElementChild);
+      }
+
+      //adds report into the report block
+      if(ifHeygen != text){
+        reportBlock.insertAdjacentHTML("afterbegin", responseArray[responseCount-1]);
+        reportBlock.style.display="flex";
+        text = ifHeygen;
+      }
+
+
       // Send the AI's response to Heygen's streaming.task API
       const resp = await repeat(sessionInfo.session_id, text);
       updateStatus(statusElement, 'LLM response sent successfully');
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
     }
+
+    // displays subtitles and changes sentences based on sentence length
+    // let subs = document.getElementById("subs");
+    
+    // let timeCounter = 0;
+    // for(let i = 0; i < subSentences.length; i++){
+
+    //   if(i == 0){
+    //     timeCounter += 0;
+    //   }
+    //   else{
+    //     let lang = document.getElementById("languageDrop").value;
+    //     let wordCounter =[];
+    //     if (lang == "Chinese" || lang == "Japanese"){
+    //       wordCounter = subSentences[i-1].split("");
+    //     }
+    //     else{
+    //       wordCounter = subSentences[i-1].split(" ");
+    //     }
+
+    //     console.log(wordCounter)
+        
+    //     if (wordCounter.length <= 2){
+    //       timeCounter += 1000;
+    //     }
+    //     else if (wordCounter.length > 2 && wordCounter.length <= 10){
+    //       timeCounter += 3000;
+    //     }
+    //     else if (wordCounter.length > 10 && wordCounter.length <= 18){
+    //       timeCounter += 6000;
+    //     }
+    //     else if (wordCounter.length > 18 && wordCounter.length <= 26){
+    //       timeCounter += 9000;
+    //     }
+    //     else if (wordCounter.length > 26 && wordCounter.length <= 34){
+    //       timeCounter += 12000;
+    //     }
+    //     else{
+    //       timeCounter += 15000;
+    //     }
+    //   }
+
+    //   setTimeout(() =>{
+    //     subs.innerHTML = subSentences[i];
+    //   }, timeCounter)
+    // }
+    // subs.innerHTML = "";
+    
+
   } catch (error) {
     console.error('Error talking to AI:', error);
     updateStatus(statusElement, 'Error talking to AI');
@@ -160,14 +253,17 @@ async function talkHandler() {
 
 // when clicking the "Close" button, close the connection
 async function closeConnectionHandler() {
+
+  document.getElementById("badcode").innerHTML = "not playing";
+
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     return;
   }
 
   renderID++;
-  hideElement(canvasElement);
-  hideElement(bgCheckboxWrap);
+  // hideElement(canvasElement);
+  // hideElement(bgCheckboxWrap);
   mediaCanPlay = false;
 
   updateStatus(statusElement, 'Closing connection... please wait');
@@ -182,6 +278,40 @@ async function closeConnectionHandler() {
     console.error('Failed to close the connection:', err);
   }
   updateStatus(statusElement, 'Connection closed successfully');
+
+
+  // document.getElementById("subs").innerHTML = "";
+
+  
+  //stores the transcript into arrays
+  //let transcript = responseJSON.conversation.transcription.split("\n");
+
+  // for(let i = 0; i < transcript.length; i++){
+  //   if (transcript[i].substring(0, 9) == "Assistant"){
+  //     compTrans.push(transcript[i]);
+  //   }
+  //   else{
+  //     userTrans.push(transcript[i]);
+  //   }
+  // }
+
+  //gets deletes thread and uploads folder
+  const response = await fetch(`http://localhost:3000/openai/destroy`, {
+    method: 'POST',
+  });
+
+  if (response.status === 500) {
+    console.error('Server error');
+    updateStatus(
+      statusElement,
+      'Server Error. Please make sure to set the openai api key',
+    );
+    throw new Error('Server error');
+  }
+  else{
+    console.log("deleted successfully!");
+  }
+
 }
 
 document.querySelector('#newBtn').addEventListener('click', createNewSession);
@@ -285,6 +415,22 @@ async function talkToOpenAI(prompt) {
     throw new Error('Server error');
   } else {
     const data = await response.json();
+
+    //puts all the responses into an array I can use elsewhere
+    responseArray.push(data.text);
+    responseCount = responseCount + 1;
+    console.log(data.text);
+
+    //does subtitle stuff
+    // subSentences = [];
+    // let cutoff = 0;
+    // for(let i = 0; i < data.text.length; i++){
+    //   if (data.text.charAt(i) == "!" || data.text.charAt(i) == "." || data.text.charAt(i) == "?" || data.text.charAt(i) =="！" || data.text.charAt(i) == "？" || data.text.charAt(i) == "。" ){
+    //     subSentences.push(data.text.substring(cutoff, i));
+    //     cutoff = i+1;
+    //   }
+    // }
+
     return data.text;
   }
 }
@@ -332,6 +478,7 @@ async function stopSession(session_id) {
   }
 }
 
+/*
 const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
 removeBGCheckbox.addEventListener('click', () => {
   const isChecked = removeBGCheckbox.checked; // status after click
@@ -360,6 +507,7 @@ removeBGCheckbox.addEventListener('click', () => {
     renderID++;
   }
 });
+*/
 
 let renderID = 0;
 function renderCanvas() {
@@ -430,14 +578,240 @@ mediaElement.onloadedmetadata = () => {
   mediaCanPlay = true;
   mediaElement.play();
 
-  showElement(bgCheckboxWrap);
+  // showElement(bgCheckboxWrap);
 };
-const canvasElement = document.querySelector('#canvasElement');
 
-const bgCheckboxWrap = document.querySelector('#bgCheckboxWrap');
-const bgInput = document.querySelector('#bgInput');
-bgInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    renderCanvas();
+
+
+
+
+//upload button functionality
+
+// Set workerSrc for PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+document.getElementById("uploadBtn").addEventListener("click", ()=>{
+  document.getElementById("uploadBlock").style.display = "flex";
+});
+
+document.getElementById("uploadBlock").addEventListener("submit", function (e) {
+  e.preventDefault(); // Prevents default form submission
+  updateStatus(statusElement, "Uploading File...");
+
+  const formData = new FormData(this); // Creates FormData object with form data
+  const fileInput = document.getElementById("formatfile");
+
+  if (fileInput.files.length === 0) {
+    alert("Please select a file!");
+    return;
   }
+
+  fetch("/openai/upload", {
+    method: "POST",
+    body: formData, // Sends the formData (file) to the server
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log("Success:", data);
+    updateStatus(statusElement, "Upload Successful!");
+  })
+  .catch(error => {
+    console.error("Error:", error);
+  });
+  
+});
+
+
+//pdf display
+const fileInput = document.getElementById('formatfile');
+const pdfContainer = document.getElementById('pdfContainer');
+
+// Handle the file input change event
+fileInput.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+
+    // When the file is read, render the PDF pages
+    reader.onload = function(e) {
+      const pdfData = new Uint8Array(e.target.result);
+
+      pdfContainer.innerHTML = '';
+
+      // Use PDF.js to render the PDF
+      pdfjsLib.getDocument(pdfData).promise.then(function(pdf) {
+        // Loop through each page and render it
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          pdf.getPage(pageNum).then(function(page) {
+            const scale = window.innerWidth/1500; // Adjust scale for better visibility
+            const viewport = page.getViewport({ scale: scale });
+
+            // Create a canvas element to render the page
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            // Append the canvas to the container
+            pdfContainer.appendChild(canvas);
+
+            // Get the rendering context
+            const context = canvas.getContext('2d');
+
+            // Render the page on the canvas
+            page.render({
+              canvasContext: context,
+              viewport: viewport
+            });
+          });
+        }
+      });
+    };
+
+    // Read the PDF file as binary string
+    reader.readAsArrayBuffer(file);
+  }
+});
+
+
+
+
+
+
+
+
+
+//stuff about the the buttons on the html
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
+        
+//determines recognition language based on dropdown selection
+var selector = document.getElementById("languageDrop");
+var selectedLang = selector.value;
+recognition.lang = "en-US";
+var speechStarted = false;
+recognition.continuous = true;
+var transStore = [];
+
+selector.addEventListener("change", function(){
+  var selectedLang = this.value;
+  console.log(selectedLang);
+  if (selectedLang == "English"){
+    recognition.lang = "en-US";
+  }
+  if (selectedLang == "Chinese"){
+    recognition.lang = "zh-TW";
+  }
+  if (selectedLang == "Japanese"){
+    recognition.lang = "ja";
+  }
+  if (selectedLang == "German"){
+    recognition.lang = "de";
+  }
+  if (selectedLang == "French"){
+    recognition.lang = "fr";
+  }
+  if (selectedLang == "Italian"){
+    recognition.lang = "it";
+  }
+  if (selectedLang == "Spanish"){
+    recognition.lang = "es";
+  }
+});
+
+
+
+const startButton = document.getElementById('speachBtn');
+const outputDiv = document.getElementById('output');
+const talkBtn = document.getElementById('talkBtn');
+const endBtn = document.getElementById('endSpeech');
+const closeUpload = document.getElementById('closeUpload');
+const closeReport = document.getElementById('closeReport');
+recognition.onstart = () => {
+    startButton.textContent = 'Listening...';
+};
+
+recognition.onresult = (event) => {
+    const transcript = event.results[event.resultIndex][0].transcript;
+    transStore.push(transcript);
+    // outputDiv.textContent = transcript;
+};
+
+recognition.onend = () =>{
+  startButton.textContent = 'Start Voice Input';
+  let allTrans = "";
+  for(let i = 0; i < transStore.length; i++){
+    allTrans += transStore[i];
+  }
+  taskInput.value = allTrans;
+  talkBtn.click();
+  console.log(allTrans);
+  transStore = []
+};
+
+startButton.addEventListener('click', () =>{
+  recognition.start();
+  endBtn.style.display = "initial";
+});
+
+endBtn.addEventListener('click', ()=>{
+  recognition.stop();
+  endBtn.style.display = "none";
+});
+
+closeUpload.addEventListener('click', ()=>{
+  document.getElementById('uploadBlock').style.display = "none";
+})
+
+closeReport.addEventListener('click', ()=>{
+  document.getElementById('reportPop').style.display = "none";
+})
+
+
+//stuff for download button
+document.getElementById("download").addEventListener("click", downloadContent);
+
+function downloadContent() {
+    // Get the content of the div
+    var content = document.getElementById('reportPop').firstElementChild.innerHTML;
+
+    // Create a blob with the content
+    var blob = new Blob([content], { type: 'text/html' });
+
+    // Create an anchor element to simulate the download
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'content.html'; // The name of the downloaded file
+
+    // Trigger the download by clicking the link
+    link.click();
+}
+
+
+//shortcut buttons
+addEventListener("keydown", function(e){;
+
+  //checks if Wayne is on screen
+  if(document.getElementById("badcode").innerHTML=="playing"){
+    //lets user start talking by pressing the "1" key
+    if(e.key == "1"){
+      startButton.click();
+    }
+
+    if(e.key == "2"){
+      endBtn.click();
+    }
+
+    //lets user hide the status bar by pressing the "3" key
+    if(e.key == "3"){
+    var statusBlock = document.getElementById("statusBlock");
+    var leftButtons = document.getElementById("leftButtons");
+    if (statusBlock.style.display !="none" && leftButtons.style.display !="none"){
+      statusBlock.style.display = "none";
+      leftButtons.style.display = "none";
+    }
+    else{
+      statusBlock.style.display = "flex";
+      leftButtons.style.display = "initial";
+    }
+  }
+  };
 });

@@ -160,18 +160,35 @@ async function talkHandler() {
   try {
     const text = await talkToOpenAI(prompt)
 
-    //checks if any part of the text is JSON, and forcefully ends if the connection
-    for(let i = 0; i < text.length; i++){
-      if (text.charAt(i) == "{"){
-        closeConnectionHandler();
-        let jsonStart = text.indexOf("{");
-        let jsonEnd = text.lastIndexOf("}");
-        responseArray[responseCount-1] = text.substring(jsonStart, jsonEnd+1);
-        return;
-      }
-    }
-
     if (text) {
+
+      let ifHeygen = text;
+
+      //checks if any part of the text is HTML, and gets heygen to say things that aren't the HTML
+      for(let i = 0; i < text.length; i++){
+        if (text.charAt(i) == "<"){
+          let htmlStart = text.indexOf("<");
+          let htmlEnd = text.lastIndexOf(">");
+          responseArray[responseCount-1] = text.substring(htmlStart, htmlEnd+1);
+          ifHeygen = text.substring(0, text.indexOf("<"));
+          
+        }
+      }
+
+      //checks if there's an existing report and remove it if there is.
+      let reportBlock = document.getElementById("reportPop");
+      if(reportBlock.firstElementChild.tagName == "SECTION"){
+        reportBlock.removeChild(reportBlock.firstElementChild);
+      }
+
+      //adds report into the report block
+      if(ifHeygen != text){
+        reportBlock.insertAdjacentHTML("afterbegin", responseArray[responseCount-1]);
+        reportBlock.style.display="flex";
+        text = ifHeygen;
+      }
+
+
       // Send the AI's response to Heygen's streaming.task API
       const resp = await repeat(sessionInfo.session_id, text);
       updateStatus(statusElement, 'LLM response sent successfully');
@@ -707,6 +724,7 @@ const outputDiv = document.getElementById('output');
 const talkBtn = document.getElementById('talkBtn');
 const endBtn = document.getElementById('endSpeech');
 const closeUpload = document.getElementById('closeUpload');
+const closeReport = document.getElementById('closeReport');
 recognition.onstart = () => {
     startButton.textContent = 'Listening...';
 };
@@ -742,6 +760,30 @@ endBtn.addEventListener('click', ()=>{
 closeUpload.addEventListener('click', ()=>{
   document.getElementById('uploadBlock').style.display = "none";
 })
+
+closeReport.addEventListener('click', ()=>{
+  document.getElementById('reportPop').style.display = "none";
+})
+
+
+//stuff for download button
+document.getElementById("download").addEventListener("click", downloadContent);
+
+function downloadContent() {
+    // Get the content of the div
+    var content = document.getElementById('reportPop').firstElementChild.innerHTML;
+
+    // Create a blob with the content
+    var blob = new Blob([content], { type: 'text/html' });
+
+    // Create an anchor element to simulate the download
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'content.html'; // The name of the downloaded file
+
+    // Trigger the download by clicking the link
+    link.click();
+}
 
 
 //shortcut buttons

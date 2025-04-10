@@ -180,7 +180,7 @@ header p{
 
 #sumBox h2{
     font-size: 1.5em;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 #sumBox h3{
@@ -197,7 +197,7 @@ header p{
 .sumBlurb h3{
     font-size: 1.1em;
     margin-bottom: 1vh;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 #paramBoxes{
@@ -304,6 +304,10 @@ h1{
     color: white;
 }
 
+#tableHeader p{
+    font-weight: 600;
+}
+
 #tableHeader .tableBack{
     gap: 16.5vw;
 }
@@ -325,16 +329,21 @@ h1{
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 6vw;
+    gap: 4vw;
     margin-left: 2vw;
 }
 
+.tableName{
+    font-weight: 600;
+}
+
 .tableFront p{
-    width: 10vw;
+    width: 14vw;
 }
 
 .tableBack{
     width: 30vw;
+    gap: 6vw;
 }
 
 
@@ -373,11 +382,22 @@ h1{
     display: none;  /* Safari and Chrome */
 }
 
+.returnToList{
+    position: relative;
+    left: -12vw;
+    top: 2vh;
+    font-size: 1.8em;
+}
+
+.returnToList:hover{
+    cursor: pointer;
+}
+
 .compareBox h2{
     font-size: 1.5em;
-    font-weight: bold;
+    font-weight: 600;
     padding-bottom: 3vh;
-    padding-top: 3vh;
+    padding-top: 1vh;
 }
 
 .rankBlurb{
@@ -458,11 +478,13 @@ h1{
 }
 
 .compareList h3{
-    padding: 3vh;
+    padding: 2.5vh;
     font-size: 1.3em;
-    font-weight: bold;
+    font-weight: 600;
     text-align: center;
     border-width: 0 0 0.2px 0;
+    background-color: #43B02A;
+    color: white;
     border-color: #9D9D9D;
     border-style: solid;
 }
@@ -477,6 +499,7 @@ h1{
     border-style: solid;
     border-width: 0 0 0.2px 0;
     border-color: #9D9D9D;
+    background-color: white;
 }
 
 .compareSelection:hover{
@@ -504,7 +527,7 @@ h1{
 
 .compareText h3{
     color: red;
-    font-weight: bold;
+    font-weight: 600;
     margin-top: 2vh;
     margin-bottom: 0.2vh;
 }

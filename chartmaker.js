@@ -14,7 +14,7 @@ export function createDoughnut(uniqueId, candidateScore, location){
 
     let font_size = 16;
     if(location=="report"){
-        font_size = 16;
+        font_size = 20;
     }
     else if(location=="compare"){
         font_size = 24;

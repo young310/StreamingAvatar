@@ -25,7 +25,7 @@ var responseCount = 0;
 
 
 //keeps track of all the candidates in the database
-let preCand = await cand.fetchCandidateData("", "");
+let preCand = await cand.fetchAllCandidates();
 console.log(preCand);
 if(preCand.length != 0){
   for(let i = 0; i < preCand.length; i++){
@@ -441,46 +441,46 @@ async function closeConnectionHandler() {
   await cand.updateScoreReport(candidate_id, techscore, workscore, softscore, eduscore, bescore);
 
   //creates the candidate in the list
-  let day = currentDate.getDate();
-  let month = currentDate.getMonth() + 1;
-  let year = currentDate.getFullYear();
-  let date_format = `${month}/${day}/${year}`;
-  cand.createCandidateRow(name, applyingFor, date_format, score, candidate_id);
+  cand.createCandidateRow(name, applyingFor, formattedDate, score, candidate_id);
+
 
   //updates the preCand array
-  preCand = await cand.fetchCandidateData("", "");
+  preCand = await cand.fetchAllCandidates();
 }
 
 
 //moves to individual candidate report page when you click on a candidate row
-document.querySelectorAll(".candidateRow").forEach(element => element.addEventListener("click", ()=>{
-  let rowId = element.id;
-  let pcand;
-  let prep;
-  let pscore;
-  cand.fetchCandidateData("candidate", rowId).then(result => {
-    pcand = result[0];
-    // Optionally chain further actions here after this async operation completes
-    return cand.fetchReportData(rowId);
-  }).then(result => {
-    prep = result[0];
-    // Now you can call the next one
-    return cand.fetchReportScores (rowId);
-  }).then(result => {
-    pscore = result[0];
+document.getElementById("candidateTable").addEventListener("click", (event)=>{
+  const listRow = event.target.closest(".candidateRow");
+  if(listRow){
+    let rowId = listRow.id;
+    let pcand;
+    let prep;
+    let pscore;
+    cand.fetchCandidate(rowId).then(result => {
+      pcand = result[0];
+      // Optionally chain further actions here after this async operation completes
+      return cand.fetchReportData(rowId);
+    }).then(result => {
+      prep = result[0];
+      // Now you can call the next one
+      return cand.fetchReportScores (rowId);
+    }).then(result => {
+      pscore = result[0];
 
-    let sorted = cand.sortCandidates(preCand);
-    let rank = 0;
-    for(let i = 0; i < sorted.length; i++){
-      if (sorted[i].candidate_id == rowId){
-        rank = i+1;
+      let sortFiltered = cand.filterCandidates(preCand, pcand.applying_for);
+      let rank = 0;
+      for(let i = 0; i < sortFiltered.length; i++){
+        if (sortFiltered[i].candidate_id == rowId){
+          rank = i+1;
+        }
       }
-    }
-    document.getElementById("resultsRank").innerHTML = `<i>ranked #${rank} in Frontend Design</i>`
-    cand.createReportSummary(pcand.candidate_name, pcand.applying_for, prep.strengths, prep.weaknesses, prep.fit);
-    cand.createReportDetails(prep.technical_skills, prep.work_experience, prep.soft_skills, prep.education, prep.behavior, prep.summary);
-    cand.createReportCharts([pscore.edu_score, pscore.soft_score, pscore.behav_score, pscore.work_score, pscore.tech_score], pcand.candidate_score);
-  })
-  document.getElementById("results").style.display = "initial";
-  document.getElementById("list").style.display = "none";
-}));
+      document.getElementById("resultsRank").innerHTML = `<i>ranked #${rank} in ${pcand.applying_for}</i>`
+      cand.createReportSummary(pcand.candidate_name, pcand.applying_for, prep.strengths, prep.weaknesses, prep.fit);
+      cand.createReportDetails(prep.technical_skills, prep.work_experience, prep.soft_skills, prep.education, prep.behavior, prep.summary);
+      cand.createReportCharts([pscore.edu_score, pscore.soft_score, pscore.behav_score, pscore.work_score, pscore.tech_score], pcand.candidate_score);
+    })
+    document.getElementById("results").style.display = "initial";
+    document.getElementById("list").style.display = "none";
+  }
+});

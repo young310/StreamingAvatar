@@ -9,7 +9,6 @@ export const createCandidateData = async (candidateName, applyingFor, applicatio
       });
   
       const data = await response.json();
-      console.log('Candidate created with ID:', data.candidate_id);
 
       return data.candidate_id;
     } catch (error) {
@@ -27,7 +26,6 @@ export const updateCandidateReport = async (candidate_id, technical, work, soft,
         });
 
         const data = await response.json();
-        console.log('Candidate created with ID:', data.candidate_id);
     } catch (error) {
         console.error('Error:', error);
         throw error;
@@ -43,28 +41,41 @@ export const updateScoreReport = async (candidate_id, tech_score, work_score, so
         });
 
         const data = await response.json();
-        console.log('Candidate created with ID:', data.candidate_id);
     } catch (error) {
         console.error('Error:', error);
         throw error;
     }
 };
 
-export const fetchCandidateData = async (search, variable) => {
+export const fetchAllCandidates = async () => {
     try {
-        const response = await fetch(`http://localhost:3000/api/candidates?search=${encodeURIComponent(search)}&variable=${encodeURIComponent(variable)}`, {
+        const response = await fetch(`http://localhost:3000/api/candidates`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });
 
         const data = await response.json();
-        console.log('Candidate data:', data);
         return data;
     } catch (error) {
         console.error('Error:', error);
         throw error;
     }
 };
+
+export const fetchCandidate = async (candidate_id) => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/candidates/${candidate_id}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
 
 export const fetchReportData = async (candidate_id) => {
     try {
@@ -74,7 +85,6 @@ export const fetchReportData = async (candidate_id) => {
         });
 
         const data = await response.json();
-        console.log('Candidate data:', data);
         return data;
     } catch (error) {
         console.error('Error:', error);
@@ -90,7 +100,6 @@ export const fetchReportScores = async (candidate_id) => {
         });
 
         const data = await response.json();
-        console.log('Candidate data:', data);
         return data;
     } catch (error) {
         console.error('Error:', error);
@@ -111,10 +120,28 @@ export function createCandidateRow(candidateName, applyingFor, applicationDate, 
   
     let name = document.createElement("p");
     name.innerHTML = candidateName;
+    name.classList.add("tableName");
     let applying = document.createElement("p");
     applying.innerHTML = applyingFor;
     let oneWordClass = applyingFor.replace(/\s+/g, '');
     applying.classList.add(oneWordClass);
+    let recommendation = document.createElement("p");
+    if(score > 70){
+        recommendation.innerHTML = "Highly Recommended";
+        recommendation.style.color = "#256221";
+    }
+    else if(score <= 70 && score > 50){
+        recommendation.innerHTML = "Recommended";
+        recommendation.style.color = "#7DAF2B";
+    }
+    else if(score <= 50 && score > 30){
+        recommendation.innerHTML = "Not Recommended";
+        recommendation.style.color = "#FF4D00";
+    }
+    else{
+        recommendation.innerHTML = "Strongly not Recommended";
+        recommendation.style.color = "#FF0000";
+    }
     let date = document.createElement("p");
     date.innerHTML = applicationDate;
     let scoreGraph = document.createElement("canvas");
@@ -124,6 +151,7 @@ export function createCandidateRow(candidateName, applyingFor, applicationDate, 
   
     rowFront.appendChild(name);
     rowFront.appendChild(applying);
+    rowFront.appendChild(recommendation);
     rowBack.appendChild(date);
     rowBack.appendChild(scoreGraph);
     newRow.appendChild(rowFront);
@@ -135,9 +163,21 @@ export function createCandidateRow(candidateName, applyingFor, applicationDate, 
   
 //sorts all candidates based on their score
 export function sortCandidates(allCandidates){
-let sorted = allCandidates.sort((a, b) => b.candidate_score - a.candidate_score);
+    let sorted = allCandidates.sort((a, b) => b.candidate_score - a.candidate_score);
 return sorted;
 }
+
+export function filterCandidates(allCandidates, filter){
+    let filtered = [];
+    let sorted = sortCandidates(allCandidates);
+    for (let i = 0; i < sorted.length; i++){
+        if (sorted[i].applying_for == filter){
+            filtered.push(sorted[i]);
+        }
+    }
+    return filtered;
+}
+
 
 export function createReportSummary(name, applyingFor, strengths, weaknesses, fit){
     document.getElementById("candidateName").innerHTML = name;

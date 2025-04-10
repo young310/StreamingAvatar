@@ -6,7 +6,10 @@
     <link rel="stylesheet" href="index.css" />
     <link rel="icon" href="./favicon.ico" />
 
-    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script> 
   </head>
 
@@ -140,6 +143,7 @@
           <div class="tableFront">
             <p>Name</p>
             <p>Applying For</p>
+            <p>Next Stage</p>
           </div>
           <div class="tableBack">
             <p>Date</p>
@@ -162,7 +166,8 @@
       <div id="compareContainer">
         <div class="compareBox barDisplay" id="compareLeft">
           <button class="selectCandidate">Select Candidate</button>
-          <!-- <h2>Jeremy Johnson</h2>
+          <!-- <p class="returnToList">&#129136</p>
+          <h2>Jeremy Johnson</h2>
           <p class="rankBlurb">ranked #10 applying for frontend designer</p>
           <canvas id="compareGraph1" style="width: 50%"></canvas>
           <p class="changeCompareView">Change View</p>

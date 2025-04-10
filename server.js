@@ -261,42 +261,35 @@ app.post("/api/scores", (req, res) =>{
 });
 
 
-//look for candidate data
+//look for all candidates
 app.get("/api/candidates", (req, res) => {
-  const { search, variable } = req.query;
   db.serialize(() => {
-    if(search == "apply"){
-      db.all(`SELECT * FROM candidates WHERE applying_for=?`, [variable], (err, rows) => {
-        if (err) {
-          return res.status(500).json({ error: 'Error fetching data: ' + err.message });
-        } else {
-          res.json(rows);
-        }
-      });
-    }
-    else if (search == "candidate"){
-      db.all('SELECT * FROM candidates WHERE candidate_id=?', [variable], (err, rows) => {
-        if (err) {
-          return res.status(500).json({ error: 'Error fetching data: ' + err.message });
-        } else {
-          res.json(rows); // Directly send the rows as JSON response
-        }
-      });
-    }
-    else{
-      db.all('SELECT * FROM candidates', [], (err, rows) => {
-        if (err) {
-          return res.status(500).json({ error: 'Error fetching data: ' + err.message });
-        } else {
-          res.json(rows); // Directly send the rows as JSON response
-        }
-      });
-    }
+    db.all('SELECT * FROM candidates', [], (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
+      } else {
+        res.json(rows); // Directly send the rows as JSON response
+      }
+    });
+  })
+});
+
+//look for pre-existing candidates in database
+app.get("/api/candidates/:id", (req, res) => {
+  const candidate_id = req.params.id;
+  db.serialize(() => {
+    db.all('SELECT * FROM candidates WHERE candidate_id = ?', [candidate_id], (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
+      } else {
+        res.json(rows); // Directly send the rows as JSON response
+      }
+    });
   })
 });
 
 
-//look for pre-existing candidates in database
+//look for report from specific candidate
 app.get("/api/reports", (req, res) => {
   const { candidate_id } = req.query;
   db.serialize(()=>{

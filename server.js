@@ -3,33 +3,331 @@ const OpenAI = require('openai')
 const path = require('path');
 const app = express();
 app.use(express.json());
-
-
+var threadId;
+var threadByUser;
 const openai = new OpenAI({
-  apiKey: "<your openai api key>",
+  apiKey: "",
+  defaultHeaders: { 'OpenAI-Beta': 'assistants=v2' }
 });
+// const threadId = createThread().then(thread => {return thread.id;});
+const model='gpt-4o-mini';
+const thread = openai.beta.threads.create()
+const assistantId = 'asst_5VWcFrAbaPmgul37WDRPvrKi';
+let pollingInterval;
+const systemSetup = "you are a recruiter from 勤業眾信, \
+we are looking for a software engineer to join our team. \
+Please introduce yourself and tell me about your experience and skills. \"";
 
-const systemSetup = "you are a demo streaming avatar from HeyGen, an industry-leading AI generation product that specialize in AI avatars and videos.\nYou are here to showcase how a HeyGen streaming avatar looks and talks.\nPlease note you are not equipped with any specific expertise or industry knowledge yet, which is to be provided when deployed to a real customer's use case.\nAudience will try to have a conversation with you, please try answer the questions or respond their comments naturally, and concisely. - please try your best to response with short answers, limit to one sentence per response, and only answer the last question."
+// Set up a Thread
+async function createThread() {
+    console.log('Creating a new thread...');
+    const thread = await openai.beta.threads.create();
+    return thread;
+}
+
+async function addMessage(threadId, message) {
+    console.log('Adding a new message to thread: ' + threadId);
+    const response = await openai.beta.threads.messages.create(
+        threadId,
+        {
+            role: "user",
+            content: message
+        }
+    );
+    return response;
+}
+
+async function runAssistant(threadId) {
+    console.log('Running assistant for thread: ' + threadId)
+    const response = await openai.beta.threads.runs.create(
+        threadId,
+        { 
+          assistant_id: assistantId
+          // Make sure to not overwrite the original instruction, unless you want to
+        }
+      );
+
+    console.log(response)
+
+    return response;
+}
+
+async function checkingStatus(res, threadId, runId) {
+}
+
+
+
 
 app.use(express.static(path.join(__dirname, '.')));
 
+// app.post('/openai/complete', async (req, res) => {
+//   try {
+//     const prompt = req.body.prompt;
+//     const chatCompletion = await openai.chat.completions.create({
+//       messages: [
+//         { role: 'system', content: systemSetup},
+//         { role: 'user', content: prompt }
+//       ],
+//       model: 'gpt-4o',
+//     });
+//     res.json({ text: chatCompletion.choices[0].message.content });
+//   } catch (error) {
+//     console.error('Error calling OpenAI:', error);
+//     res.status(500).send('Error processing your request');
+//   }
+// });
+
 app.post('/openai/complete', async (req, res) => {
+    // Create a new thread if it's the user's first message
+  if (!threadByUser) {
+    try {
+      const myThread = await openai.beta.threads.create();
+      console.log("New thread created with ID: ", myThread.id, "\n");
+      threadByUser = myThread.id; // Store the thread ID for this user
+    } catch (error) {
+      console.error("Error creating thread:", error);
+      res.status(500).json({ error: "Internal server error" });
+      return;
+    }
+  }
+
+  const userMessage = req.body.prompt;
+
+  // Add a Message to the Thread
   try {
-    const prompt = req.body.prompt;
-    const chatCompletion = await openai.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemSetup},
-        { role: 'user', content: prompt }
-      ],
-      model: 'gpt-3.5-turbo',
-    });
-    res.json({ text: chatCompletion.choices[0].message.content });
+    const myThreadMessage = await openai.beta.threads.messages.create(
+      threadByUser, // Use the stored thread ID for this user
+      {
+        role: "user",
+        content: userMessage,
+      }
+    );
+    console.log("This is the message object: ", myThreadMessage, "\n");
+
+    // Run the Assistant
+    const myRun = await openai.beta.threads.runs.create(
+      threadByUser, // Use the stored thread ID for this user
+      {
+        assistant_id: assistantId,
+      }
+    );
+    console.log("This is the run object: ", myRun, "\n");
+
+    // Periodically retrieve the Run to check on its status
+    const retrieveRun = async () => {
+      let keepRetrievingRun;
+
+      while (myRun.status !== "completed") {
+        keepRetrievingRun = await openai.beta.threads.runs.retrieve(
+          threadByUser, // Use the stored thread ID for this user
+          myRun.id
+        );
+
+        console.log(`Run status: ${keepRetrievingRun.status}`);
+
+        if (keepRetrievingRun.status === "completed") {
+          console.log("\n");
+          break;
+        }
+      }
+    };
+    retrieveRun();
+
+    // Retrieve the Messages added by the Assistant to the Thread
+    const waitForAssistantMessage = async () => {
+      await retrieveRun();
+
+      const allMessages = await openai.beta.threads.messages.list(
+        threadByUser // Use the stored thread ID for this user
+      );
+
+      let AI_Response = allMessages.data[0].content[0].text.value;
+      let User_Response = myThreadMessage.content[0].text.value;
+
+      // Send the response back to the front end
+      //   res.status(200).json({
+      //     response: allMessages.data[0].content[0].text.value,
+      //   });
+      res.json({ text: AI_Response });
+      console.log("------------------------------------------------------------ \n");
+      console.log("User: ", User_Response);
+      console.log("Assistant: ", AI_Response);
+
+    };
+    waitForAssistantMessage();
   } catch (error) {
-    console.error('Error calling OpenAI:', error);
-    res.status(500).send('Error processing your request');
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-app.listen(3000, function () {
-  console.log('App is listening on port 3000!');
+
+
+
+//does the database things
+
+
+//code about connecting to the database
+const sqlite = require('sqlite3'); //adds sqlite functionality to code. Requires installation (npm install sqlite3)
+const db = new sqlite.Database('./data.sqlite');
+
+//creates all the tables in the database
+db.serialize(()=>{
+  //creates table that stores individual candidate information
+  db.run(`CREATE TABLE IF NOT EXISTS candidates (
+    candidate_id CHAR(255) PRIMARY KEY, 
+    candidate_name TEXT,
+    applying_for TEXT,
+    application_date DATETIME,
+    candidate_score INTEGER
+    )`);
+
+  //creates table that stores each candidate's report information
+  db.run(`CREATE TABLE IF NOT EXISTS reports (
+    report_id CHAR(255) PRIMARY KEY,
+    candidate_id CHAR(255),
+    technical_skills TEXT,
+    work_experience TEXT,
+    soft_skills TEXT,
+    education TEXT,
+    behavior TEXT,
+    summary TEXT,
+    strengths TEXT,
+    weaknesses TEXT,
+    fit TEXT,
+    FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
+    )`);
+
+  //creates table that stores the individual scores of each individual report section
+  db.run(`CREATE TABLE IF NOT EXISTS score_reports (
+    report_id CHAR(255) PRIMARY KEY,
+    candidate_id CHAR(255),
+    tech_score INTEGER,
+    work_score INTEGER,
+    soft_score INTEGER,
+    edu_score INTEGER,
+    behav_score INTEGER,
+    FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
+    )`);
 });
+
+
+//saves candidate data into sqlite database and returns a unique candidate id
+app.post("/api/candidates", (req, res) => {
+  const { candidateName, applyingFor, applicationDate, candidateScore } = req.body;
+  db.serialize(() => {
+
+    let candidate_id = "C" + (new Date().getTime() + Math.floor(Math.random())).toString();
+
+    db.run(`INSERT INTO candidates VALUES (?, ?, ?, ?, ?)`, [candidate_id, candidateName, applyingFor, applicationDate, candidateScore], function(err){
+      if (err) return res.status(500).json({ error: 'Failed to create candidate', details: err });
+      res.status(201).json({ candidate_id });
+    });
+
+    return candidate_id;
+    
+  });
+
+});
+
+//saves report (text) of the candidate skills into the database
+app.post("/api/reports", (req, res) =>{
+  const { candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit } = req.body;
+  db.serialize(() => {
+
+    let report_id = "R" + (new Date().getTime() + Math.floor(Math.random())).toString();
+
+    db.run(`INSERT INTO reports VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit], function(err){
+      if (err) return res.status(500).json({ error: 'Failed to create report', details: err });
+      res.status(201).json({ report_id });
+    });
+  
+  });
+});
+
+//saves report (scores) of the candidate skills into the database
+app.post("/api/scores", (req, res) =>{
+  const { candidate_id, tech_score, work_score, soft_score, edu_score, behav_score } = req.body;
+  db.serialize(()=>{
+
+    let report_id = "S" + (new Date().getTime() + Math.floor(Math.random())).toString();
+    
+    db.run(`INSERT into score_reports VALUES (?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, tech_score, work_score, soft_score, edu_score, behav_score], function(err){
+      if (err) return res.status(500).json({ error: 'Failed to create score report', details: err });
+      res.status(201).json({ report_id });
+    });
+
+  });
+});
+
+
+//look for candidate data
+app.get("/api/candidates", (req, res) => {
+  const { search, variable } = req.query;
+  db.serialize(() => {
+    if(search == "apply"){
+      db.all(`SELECT * FROM candidates WHERE applying_for=?`, [variable], (err, rows) => {
+        if (err) {
+          return res.status(500).json({ error: 'Error fetching data: ' + err.message });
+        } else {
+          res.json(rows);
+        }
+      });
+    }
+    else if (search == "candidate"){
+      db.all('SELECT * FROM candidates WHERE candidate_id=?', [variable], (err, rows) => {
+        if (err) {
+          return res.status(500).json({ error: 'Error fetching data: ' + err.message });
+        } else {
+          res.json(rows); // Directly send the rows as JSON response
+        }
+      });
+    }
+    else{
+      db.all('SELECT * FROM candidates', [], (err, rows) => {
+        if (err) {
+          return res.status(500).json({ error: 'Error fetching data: ' + err.message });
+        } else {
+          res.json(rows); // Directly send the rows as JSON response
+        }
+      });
+    }
+  })
+});
+
+
+//look for pre-existing candidates in database
+app.get("/api/reports", (req, res) => {
+  const { candidate_id } = req.query;
+  db.serialize(()=>{
+    db.all(`SELECT * FROM reports WHERE candidate_id=?`, [candidate_id], (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
+      } else {
+        res.json(rows); // Directly send the rows as JSON response
+      }
+    });
+  })
+});
+
+//look for scores from the reports
+app.get("/api/scores", (req, res) => {
+  const { candidate_id } = req.query;
+  db.serialize(()=>{
+    db.all(`SELECT * FROM score_reports WHERE candidate_id=?`, [candidate_id], (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
+      } else {
+        res.json(rows); // Directly send the rows as JSON response
+      }
+    });
+  })
+});
+
+
+
+    
+app.listen(3000, function () {
+    console.log('App is listening on port 3000!');
+});
+

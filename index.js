@@ -1,7 +1,9 @@
 'use strict';
+import * as cand from './candidate.js';
+import * as chartmaker from './chartmaker.js';
 
 const heygen_API = {
-  apiKey: 'YourApiKey',
+  apiKey: '',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -16,8 +18,25 @@ if (apiKey === 'YourApiKey' || SERVER_URL === '') {
 let sessionInfo = null;
 let peerConnection = null;
 
+//create global array to store all the assistant's responses
+var responseArray = [];
+var responseCount = 0;
+// let subSentences = [];
+
+
+//keeps track of all the candidates in the database
+let preCand = await cand.fetchCandidateData("", "");
+console.log(preCand);
+if(preCand.length != 0){
+  for(let i = 0; i < preCand.length; i++){
+    //creates rows on the table based on pre-existing candidate data
+    cand.createCandidateRow(preCand[i].candidate_name, preCand[i].applying_for, preCand[i].application_date, preCand[i].candidate_score, preCand[i].candidate_id);
+  }
+}
+
 function updateStatus(statusElement, message) {
-  statusElement.innerHTML += message + '<br>';
+  //statusElement.innerHTML += message + '<br>';
+  statusElement.innerHTML = message;
   statusElement.scrollTop = statusElement.scrollHeight;
 }
 
@@ -36,7 +55,7 @@ async function createNewSession() {
   const voice = voiceID.value;
 
   // call the new interface to get the server's offer SDP and ICE server to create a new RTCPeerConnection
-  sessionInfo = await newSession('low', avatar, voice);
+  sessionInfo = await newSession('high', avatar, voice);
   const { sdp: serverSdp, ice_servers2: iceServers } = sessionInfo;
 
   // Create a new RTCPeerConnection
@@ -61,11 +80,14 @@ async function createNewSession() {
   await peerConnection.setRemoteDescription(remoteDescription);
 
   updateStatus(statusElement, 'Session creation completed');
-  updateStatus(statusElement, 'Now.You can click the start button to start the stream');
+  updateStatus(statusElement, 'Now. You can click the start button to start the stream');
 }
 
 // Start session and display audio and video when clicking the "Start" button
 async function startAndDisplaySession() {
+
+  document.getElementById("badcode").innerHTML = "playing";
+
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
     return;
@@ -109,7 +131,7 @@ async function startAndDisplaySession() {
 
 const taskInput = document.querySelector('#taskInput');
 
-// When clicking the "Send Task" button, get the content from the input field, then send the tas
+// When clicking the "Send Task" button, get the content from the input field, then send the task
 async function repeatHandler() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -144,6 +166,14 @@ async function talkHandler() {
   try {
     const text = await talkToOpenAI(prompt)
 
+    //checks if the text contains JSON, and forcefully ends if the connection
+    for(let i = 0; i < text.length; i++){
+      if (text.charAt(i) == "{"){
+        closeConnectionHandler();
+        return;     
+      }
+    }
+
     if (text) {
       // Send the AI's response to Heygen's streaming.task API
       const resp = await repeat(sessionInfo.session_id, text);
@@ -151,37 +181,12 @@ async function talkHandler() {
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
     }
+    
+
   } catch (error) {
     console.error('Error talking to AI:', error);
     updateStatus(statusElement, 'Error talking to AI');
   }
-}
-
-
-// when clicking the "Close" button, close the connection
-async function closeConnectionHandler() {
-  if (!sessionInfo) {
-    updateStatus(statusElement, 'Please create a connection first');
-    return;
-  }
-
-  renderID++;
-  hideElement(canvasElement);
-  hideElement(bgCheckboxWrap);
-  mediaCanPlay = false;
-
-  updateStatus(statusElement, 'Closing connection... please wait');
-  try {
-    // Close local connection
-    peerConnection.close();
-    // Call the close interface
-    const resp = await stopSession(sessionInfo.session_id);
-
-    console.log(resp);
-  } catch (err) {
-    console.error('Failed to close the connection:', err);
-  }
-  updateStatus(statusElement, 'Connection closed successfully');
 }
 
 document.querySelector('#newBtn').addEventListener('click', createNewSession);
@@ -285,6 +290,23 @@ async function talkToOpenAI(prompt) {
     throw new Error('Server error');
   } else {
     const data = await response.json();
+
+    //puts all the responses into an array I can use elsewhere
+
+    //checks if the text contains JSON and chops it up to put it in the array
+    let newText = data.text;
+    for(let i = 0; i < data.text.length; i++){
+      if (data.text.charAt(i) == "{"){
+        let htmlStart = data.text.indexOf("{");
+        let htmlEnd = data.text.lastIndexOf("}");
+        newText = data.text.substring(htmlStart, htmlEnd+1);
+      }
+    }
+
+    responseArray.push(newText);
+    responseCount = responseCount + 1;
+    console.log(newText);
+
     return data.text;
   }
 }
@@ -332,97 +354,7 @@ async function stopSession(session_id) {
   }
 }
 
-const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
-removeBGCheckbox.addEventListener('click', () => {
-  const isChecked = removeBGCheckbox.checked; // status after click
-
-  if (isChecked && !sessionInfo) {
-    updateStatus(statusElement, 'Please create a connection first');
-    removeBGCheckbox.checked = false;
-    return;
-  }
-
-  if (isChecked && !mediaCanPlay) {
-    updateStatus(statusElement, 'Please wait for the video to load');
-    removeBGCheckbox.checked = false;
-    return;
-  }
-
-  if (isChecked) {
-    hideElement(mediaElement);
-    showElement(canvasElement);
-
-    renderCanvas();
-  } else {
-    hideElement(canvasElement);
-    showElement(mediaElement);
-
-    renderID++;
-  }
-});
-
 let renderID = 0;
-function renderCanvas() {
-  if (!removeBGCheckbox.checked) return;
-  hideElement(mediaElement);
-  showElement(canvasElement);
-
-  canvasElement.classList.add('show');
-
-  const curRenderID = Math.trunc(Math.random() * 1000000000);
-  renderID = curRenderID;
-
-  const ctx = canvasElement.getContext('2d', { willReadFrequently: true });
-
-  if (bgInput.value) {
-    canvasElement.parentElement.style.background = bgInput.value?.trim();
-  }
-
-  function processFrame() {
-    if (!removeBGCheckbox.checked) return;
-    if (curRenderID !== renderID) return;
-
-    canvasElement.width = mediaElement.videoWidth;
-    canvasElement.height = mediaElement.videoHeight;
-
-    ctx.drawImage(mediaElement, 0, 0, canvasElement.width, canvasElement.height);
-    ctx.getContextAttributes().willReadFrequently = true;
-    const imageData = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
-    const data = imageData.data;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const red = data[i];
-      const green = data[i + 1];
-      const blue = data[i + 2];
-
-      // You can implement your own logic here
-      if (isCloseToGreen([red, green, blue])) {
-        // if (isCloseToGray([red, green, blue])) {
-        data[i + 3] = 0;
-      }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-
-    requestAnimationFrame(processFrame);
-  }
-
-  processFrame();
-}
-
-function isCloseToGreen(color) {
-  const [red, green, blue] = color;
-  return green > 90 && red < 90 && blue < 90;
-}
-
-function hideElement(element) {
-  element.classList.add('hide');
-  element.classList.remove('show');
-}
-function showElement(element) {
-  element.classList.add('show');
-  element.classList.remove('hide');
-}
 
 const mediaElement = document.querySelector('#mediaElement');
 let mediaCanPlay = false;
@@ -430,14 +362,125 @@ mediaElement.onloadedmetadata = () => {
   mediaCanPlay = true;
   mediaElement.play();
 
-  showElement(bgCheckboxWrap);
+  // showElement(bgCheckboxWrap);
 };
-const canvasElement = document.querySelector('#canvasElement');
 
-const bgCheckboxWrap = document.querySelector('#bgCheckboxWrap');
-const bgInput = document.querySelector('#bgInput');
-bgInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    renderCanvas();
+// when clicking the "Close" button, close the connection
+async function closeConnectionHandler() {
+
+  document.getElementById("badcode").innerHTML = "not playing";
+
+  if (!sessionInfo) {
+    updateStatus(statusElement, 'Please create a connection first');
+    return;
   }
-});
+
+  renderID++;
+  // hideElement(canvasElement);
+  // hideElement(bgCheckboxWrap);
+  mediaCanPlay = false;
+
+  updateStatus(statusElement, 'Closing connection... please wait');
+  try {
+    // Close local connection
+    peerConnection.close();
+    // Call the close interface
+    const resp = await stopSession(sessionInfo.session_id);
+
+    console.log(resp);
+  } catch (err) {
+    console.error('Failed to close the connection:', err);
+  }
+  updateStatus(statusElement, 'Connection closed successfully');
+
+  //code for creating the results page starts here
+
+  //hide original interface
+  document.getElementById("main").style.display="none";
+  document.getElementById("results").style.display="initial";
+  // document.getElementById("subs").innerHTML = "";
+
+  console.log(responseArray[responseCount-1]);
+
+  //extracts the data from the JSON
+  let responseJSON = JSON.parse(responseArray[responseCount-1]);
+
+  let name = responseJSON.candidate_profile.name;
+  let applyingFor = responseJSON.candidate_profile.applying_for;
+  let strengths = responseJSON.report.strengths;
+  let weaknesses = responseJSON.report.weaknesses;
+  let fit = responseJSON.report.fit_description;
+  let score = responseJSON.report.overall_score;
+    
+  let technical = responseJSON.report.scores.technical_skills.description;
+  let work = responseJSON.report.scores.work_or_project_experience.description;
+  let soft = responseJSON.report.scores.soft_skills.description;
+  let education = responseJSON.report.scores.educational_background.description;
+  let behavior = responseJSON.report.scores.interview_behavior.description;
+  let summary = responseJSON.report.summary;
+
+  let techscore = responseJSON.report.scores.technical_skills.score;
+  let workscore = responseJSON.report.scores.work_or_project_experience.score;
+  let softscore = responseJSON.report.scores.soft_skills.score;
+  let eduscore = responseJSON.report.scores.educational_background.score;
+  let bescore = responseJSON.report.scores.interview_behavior.score;
+
+  
+  //creates report that appears immediately after interview
+  cand.createReportSummary(name, applyingFor, strengths, weaknesses, fit);
+  cand.createReportDetails(technical, work, soft, education, behavior, summary);
+  cand.createReportCharts([eduscore, softscore, bescore, workscore, techscore], score);
+
+  //updates the SQL databases
+  let currentDate = new Date();
+  let formattedDate = currentDate.toISOString().slice(0, 19).replace('T', ' ');
+
+  let candidate_id = await cand.createCandidateData(name, applyingFor, formattedDate, score);
+  console.log(candidate_id);
+  await cand.updateCandidateReport(candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit);
+  await cand.updateScoreReport(candidate_id, techscore, workscore, softscore, eduscore, bescore);
+
+  //creates the candidate in the list
+  let day = currentDate.getDate();
+  let month = currentDate.getMonth() + 1;
+  let year = currentDate.getFullYear();
+  let date_format = `${month}/${day}/${year}`;
+  cand.createCandidateRow(name, applyingFor, date_format, score, candidate_id);
+
+  //updates the preCand array
+  preCand = await cand.fetchCandidateData("", "");
+}
+
+
+//moves to individual candidate report page when you click on a candidate row
+document.querySelectorAll(".candidateRow").forEach(element => element.addEventListener("click", ()=>{
+  let rowId = element.id;
+  let pcand;
+  let prep;
+  let pscore;
+  cand.fetchCandidateData("candidate", rowId).then(result => {
+    pcand = result[0];
+    // Optionally chain further actions here after this async operation completes
+    return cand.fetchReportData(rowId);
+  }).then(result => {
+    prep = result[0];
+    // Now you can call the next one
+    return cand.fetchReportScores (rowId);
+  }).then(result => {
+    pscore = result[0];
+
+    let sorted = cand.sortCandidates(preCand);
+    let rank = 0;
+    for(let i = 0; i < sorted.length; i++){
+      if (sorted[i].candidate_id == rowId){
+        rank = i+1;
+      }
+    }
+    document.getElementById("resultsRank").innerHTML = `<i>ranked #${rank} in Frontend Design</i>`
+    cand.createReportSummary(pcand.candidate_name, pcand.applying_for, prep.strengths, prep.weaknesses, prep.fit);
+    cand.createReportDetails(prep.technical_skills, prep.work_experience, prep.soft_skills, prep.education, prep.behavior, prep.summary);
+    cand.createReportCharts([pscore.edu_score, pscore.soft_score, pscore.behav_score, pscore.work_score, pscore.tech_score], pcand.candidate_score);
+  })
+  document.getElementById("results").style.display = "initial";
+  document.getElementById("list").style.display = "none";
+}));

@@ -260,7 +260,6 @@ app.post("/api/scores", (req, res) =>{
   });
 });
 
-
 //look for all candidates
 app.get("/api/candidates", (req, res) => {
   db.serialize(() => {
@@ -317,7 +316,22 @@ app.get("/api/scores", (req, res) => {
   })
 });
 
-
+//deletes a candidate from the database
+app.post("/api/delete", (req, res) =>{
+  const {candidate_id} = req.body;
+  db.serialize(() => {
+    db.run(`DELETE FROM candidates WHERE candidate_id = ?`, [candidate_id], function (err) {
+      if (err) return res.status(500).json({ error: 'Failed to delete candidate', details: err });
+      db.run(`DELETE FROM reports WHERE candidate_id = ?`, [candidate_id], function (err) {
+        if (err) return res.status(500).json({ error: 'Failed to delete reports', details: err });
+        db.run(`DELETE FROM score_reports WHERE candidate_id = ?`, [candidate_id], function (err) {
+          if (err) return res.status(500).json({ error: 'Failed to delete score reports', details: err });
+          res.status(201).json({ message: "Candidate deleted", candidate_id });
+        });
+      });
+    });
+  });
+});
 
     
 app.listen(3000, function () {

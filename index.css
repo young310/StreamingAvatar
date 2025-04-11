@@ -11,6 +11,26 @@ body{
 }
   
 
+button{
+    width: 9vw;
+    height: 5vh;
+    border-radius: 1vw;
+  
+    background-color: #4caf50; /* Green */
+    border: none;
+  
+    color: #fff;
+    text-align: center;
+    font-size: 1.1vw;
+  
+    cursor: pointer;
+    transition-duration: 0.1s;
+  }
+  
+  button:hover{
+    background-color: #439b47;
+  }
+
 .bigVid{
     position: absolute;
     top: 0;
@@ -20,89 +40,168 @@ body{
     overflow: hidden;
 }
 
-button{
-    width: 9vw;
-    height: 5vh;
-    border-radius: 1vw;
-
-    background-color: #4caf50; /* Green */
-    border: none;
-
-    color: #fff;
-    text-align: center;
-    font-size: 1.1vw;
-
-    cursor: pointer;
-    transition-duration: 0.4s;
+#startup{
+    width: 100vw;
+    height: 100vh;
+    background-color: white;
+    font-family:"Open Sans";
+  }
+  
+#startBody{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
-button:hover{
-    background-color: #439b47;
+#startBody img{
+    width: 55vw;
+    height: 90vh;
+    clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%); /*crops the image*/
 }
-
-#newBtn{
-    position: absolute;
-    top: 5vh;
-    left: 1vw;
-}
-
-#startBtn{
-    position: absolute;
-    top: 13vh;
-    left: 1vw;
-}
-
-#closeBtn{
+  
+  #startText{
+    padding-top: 25vh;
+    padding-left: 2vw;
+    margin-left: 2vw;
+  
+    display: flex;
+    flex-direction: column;
+    gap:2vh;
+    
+    height: auto;
+    width: auto;
+  }
+  
+  #startBody h1{
+    font-size: 3.5em;
+    padding: 0;
+    color: black;
+  }
+  
+  #startBody p{
+    font-size: 1.5em;
+    color: black;
+    margin-bottom: 2vh;
+  }
+  
+  #newBtn{
+    display: flex;
+    flex-direction: row;
+    gap: 1vw;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1vh;
+    padding: 1.5vh;
+    width: 13vw;
+    height: 7vh;
+    font-size: 1.2em;
+    border-style: none;
+  }
+  
+  @keyframes e-spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  #loader{
+    display: none;
+    width: 1vw;
+    height: 1vw;
+    border: 0.2vw solid #ffffff;
+    border-top: 0.16vw solid #4caf50;
+    border-radius: 50%;
+    animation: e-spin 0.5s linear both infinite;
+  }
+  
+  #startBtn{
+    display: none;
+  }
+  
+  #main{
+    display: initial;
+  }
+  
+  #closeBtn{
+    display: none;
     position: absolute;
     top: 21vh;
     left: 1vw;
-}
-
-#speachBtn{
+  }
+  
+  #statusBlock{
     position: absolute;
-    top: 29vh;
-    left: 1vw;
-}
-
-#statusBlock{
-    position: absolute;
-    height: auto;
-    width: 20vw;
-    top: 5vh;
-    left: 78vw;
-
+    height: 10vh;
+    width: 100%;
+    top: 90vh;
+    left: 0;
+  
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     justify-content: flex-start;
-    gap: 2vh;
-
-    border-style: solid;
-    border-width: 0.1vw;
-    border-color: rgb(176, 176, 176);
-    border-radius: 1.2vw;
-
-    background-color: rgba(0,0,0,0.3);
+    gap: 2.5vw;
+  
+    background-color: rgb(38, 38, 38, 0.5);
     color: white;
-
-    padding: 0.5vw;
-}
-
-input{
-    width: 15vw;
-}
-
-#statusBlock button{
-    width: auto;
-    height: auto;
+  }
+  
+  select{
+    font-size: 1.1em;
+    margin-left: 1vw;
+  }
+  
+  #taskInput{
+    width: 79vw;
+    height: 5vh;
+    border-radius: 2vw;
+    border-style: hidden;
+    padding-left: 1vw;
+    font-size: 1.1em;
+  }
+  
+  ::placeholder{
     color: black;
+    opacity: 0.3;
+  }
+  
+  #status{
+    position: absolute;
+    right: 2vw;
+    top: 2vh; 
+  } 
+  
+  #buttonSwitch button{
+    width: 6vw;
     background-color: white;
-    border-radius: 0;
-    padding: 0.5vh;
-    border-style: solid;
-    border-color: black;
-    border-width: 0.1vh;
-    font-size: 0.8em;
-}
+    color: black;
+    height: 5vh;
+    border-style: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition-duration: 0.1s;
+  }
+
+  #speachBtn:hover, #talkBtn:hover{
+    background-color: #ddffdd;
+    width: 6.1vw;
+  }
+
+  #talkBtn{
+    display: none;
+  }
+
+  #endSpeech{
+    display: none;
+  }
+
+  #endSpeech:hover{
+    background-color: #ffdcdc;
+    width: 6.1vw;
+  }
 
 /*header css*/
 
@@ -146,11 +245,25 @@ header p{
     display: flex;
     flex-direction: row;
     align-items: flex-end;
+    padding-bottom: 2vh;
 }
 
 #resultsRank{
     padding-left: 3vw;
     font-weight: italic;
+}
+
+#deleteCandidate{
+    position: absolute;
+    left: 87vw;
+    top: 15vh;
+    background-color: red;
+    padding: 5px;
+    width: 10vw;
+}
+
+#deleteCandidate:hover{
+    background-color: rgb(223, 0, 0);
 }
 
 #reportMain{
@@ -167,11 +280,11 @@ header p{
     flex-direction: column;
     align-items: center;
     padding-top: 1.5vw;
+    padding-bottom: 1.5vw;
     margin-left: 1vw;
     margin-right: 1vw;
     
     width: 32vw;
-    height: 80vh;
 
     background-color: #243F59;
     border-radius: 2vw;
@@ -530,4 +643,25 @@ h1{
     font-weight: 600;
     margin-top: 2vh;
     margin-bottom: 0.2vh;
+}
+
+#resetCandidates{
+    position: absolute;
+    background-color: white;
+    color: black;
+    border-style: solid;
+    border-color: black;
+    border-width: 1.5px;
+    border-radius: 10px;
+    height: 4vh;
+    width: auto;
+    padding: 0 10px 0 10px;
+    left: 76vw;
+    top: 17vh;
+}
+
+#resetCandidates:hover{
+    background-color: #e4e4e4;
+    cursor: pointer;
+    transition-duration: 0.1s;
 }

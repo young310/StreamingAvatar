@@ -1,8 +1,6 @@
 import * as cand from './candidate.js';
 import * as chartmaker from './chartmaker.js';
 
-let allCandidates = await cand.fetchAllCandidates();
-
 //stuff about the buttons on the html
 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
         
@@ -10,80 +8,138 @@ const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognit
 var selector = document.getElementById("languageDrop");
 var selectedLang = selector.value;
 recognition.lang = "en-US";
+recognition.continuous = true;
+var transStore = [];
 
 selector.addEventListener("change", function(){
   var selectedLang = this.value;
   console.log(selectedLang);
   if (selectedLang == "English"){
     recognition.lang = "en-US";
+    taskInput.placeholder = "Hello, what would you like to talk about today?"
   }
   if (selectedLang == "Chinese"){
-    recognition.lang = "zh-TW";
+    recognition.lang = "zh-TW"; 
+    taskInput.placeholder = "你好，你今天想聊些什麼？"
   }
   if (selectedLang == "Japanese"){
     recognition.lang = "ja";
+    taskInput.placeholder = "こんにちは、今日は何を話したいですか？"
   }
   if (selectedLang == "German"){
     recognition.lang = "de";
+    taskInput.placeholder = "Hallo, worüber möchtest du heute sprechen?"
   }
   if (selectedLang == "French"){
     recognition.lang = "fr";
+    taskInput.placeholder = "Bonjour, de quoi veux-tu parler aujourd'hui ?"
   }
   if (selectedLang == "Italian"){
     recognition.lang = "it";
+    taskInput.placeholder = "Ciao, di cosa vuoi parlare oggi?"
   }
   if (selectedLang == "Spanish"){
     recognition.lang = "es";
+    taskInput.placeholder = "Hola, ¿de qué te gustaría hablar hoy?"
   }
 });
 
 
 
 const startButton = document.getElementById('speachBtn');
-const outputDiv = document.getElementById('output');
+const taskInput = document.getElementById('taskInput');
 const talkBtn = document.getElementById('talkBtn');
+const endBtn = document.getElementById('endSpeech');
 recognition.onstart = () => {
-    startButton.textContent = 'Listening...';
+    // startButton.textContent = 'Listening...';
 };
 
 recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    taskInput.value = transcript;
-    talkBtn.click();
-    // outputDiv.textContent = transcript;
+    const transcript = event.results[event.resultIndex][0].transcript;
+    transStore.push(transcript);
 };
 
 recognition.onend = () =>{
-  startButton.textContent = 'Start Voice Input';
+  // startButton.textContent = 'Start Voice Input';
+  let allTrans = "";
+  for(let i = 0; i < transStore.length; i++){
+    allTrans += transStore[i];
+  }
+  taskInput.value = allTrans;
+  talkBtn.click();
+  console.log(allTrans);
+  transStore = []
 };
 
 startButton.addEventListener('click', () =>{
   recognition.start();
+  endBtn.style.display = "initial";
+  startButton.style.display = "none";
 });
 
+endBtn.addEventListener('click', ()=>{
+  recognition.stop();
+  endBtn.style.display = "none";
+  startButton.style.display = "initial";
+});
+
+let typing = false;
+
+//stuff that hides stuff
 addEventListener("keydown", function(e){;
 
-  //checks if Wayne is on screen
-  if(document.getElementById("badcode").innerHTML=="playing"){
-    //lets user start talking by pressing the "s" key
-    if(e.key == "1"){
-      recognition.start();
+  //lets user start talking by pressing the "1" key
+  if(e.key == "1"){
+      startButton.click();
     }
 
-    //lets user hide the status bar by pressing the "h" key
+    //lets user click the 'end speech' button by pressing the "2" key
     if(e.key == "2"){
-    var statusBlock = document.getElementById("statusBlock");
-    var leftButtons = document.getElementById("leftButtons");
-    if (statusBlock.style.display !="none" && leftButtons.style.display !="none"){
-      statusBlock.style.display = "none";
-      leftButtons.style.display = "none";
+      endBtn.click();
     }
-    else{
-      statusBlock.style.display = "flex";
-      leftButtons.style.display = "initial";
+
+    //lets user hide the status bar by pressing the "3" key
+    if(e.key == "3"){
+      var statusBlock = document.getElementById("statusBlock");
+      if (statusBlock.style.display !="none"){
+        statusBlock.style.display = "none";
+      }
+      else{
+        statusBlock.style.display = "flex";
+      }
     }
+
+    //let's the user input stuff via the Enter button if typing
+    if(typing == true && e.key == "Enter"){
+      talkBtn.click();
+      taskInput.value = "";
+      talkBtn.style.display = "none";
+      startButton.style.display = "initial";
+      typing = false;
+    }
+});
+
+//deals with transitions between send text, speech, and stop speech buttons
+taskInput.addEventListener("input", ()=>{
+  if(taskInput.value == ""){
+    talkBtn.style.display = "none";
+    startButton.style.display = "initial";
+    typing = false;
   }
-  };
+  else{
+    talkBtn.style.display = "initial";
+    startButton.style.display = "none";
+    typing = true;
+  }
+});
+
+
+
+
+//loads Wayne when new button "get started" is pressed
+document.getElementById('newBtn').addEventListener("click", ()=>{
+  document.getElementById("newBtn").innerHTML = "Starting Up<div id='loader'></div>";
+  document.getElementById("loader").style.display = "initial";
 });
 
 
@@ -126,9 +182,15 @@ document.getElementById("compareContainer").addEventListener("click", (event)=>{
     let chosenCandidate = event.target.closest(".compareSelection"); //ensures user can only click on the candidate options
     if(selectedList.style.display != "none" && chosenCandidate){
       let candidateid = event.target.closest(".compareSelection").lastChild.innerHTML; //grabs the candidate id from the hidden div
+      let allCandidates;
       let candidateJSON;
-      cand.fetchCandidate(candidateid).then(result => {
-        candidateJSON = result;
+      cand.fetchAllCandidates().then(result => {
+        allCandidates = result;
+        for(let i = 0; i < allCandidates.length; i++){
+          if(allCandidates[i].candidate_id == candidateid){
+            candidateJSON = allCandidates[i];
+          }
+        }
         return cand.fetchReportScores(candidateid);
       }).then(result =>{
         let scoreJSON = result;
@@ -136,10 +198,10 @@ document.getElementById("compareContainer").addEventListener("click", (event)=>{
         returnButton.innerHTML = "&#129136";
         returnButton.classList.add("returnToList");
         let name = document.createElement("h2");
-        name.innerHTML = candidateJSON[0].candidate_name;
+        name.innerHTML = candidateJSON.candidate_name;
         let rank = document.createElement("p");
 
-        let sortedCandidates = cand.filterCandidates(allCandidates, candidateJSON[0].applying_for);
+        let sortedCandidates = cand.filterCandidates(allCandidates, candidateJSON.applying_for);
         for(let i = 0; i < sortedCandidates.length; i++){
           if(sortedCandidates[i].candidate_id == candidateid){
             rank.innerHTML = "<i>ranked #" + (i+1) + " applying for " + sortedCandidates[i].applying_for +"</i>";
@@ -147,7 +209,7 @@ document.getElementById("compareContainer").addEventListener("click", (event)=>{
         }
 
         let graph = document.createElement("canvas");
-        graph.setAttribute("id", "compare" + candidateJSON[0].candidate_id);
+        graph.setAttribute("id", "compare" + candidateJSON.candidate_id);
         graph.style.width = "50%";
         graph.style.maxWidth = "16vw";
 
@@ -219,7 +281,7 @@ document.getElementById("compareContainer").addEventListener("click", (event)=>{
         parentBox.appendChild(scorebox);
         parentBox.appendChild(hidden);
 
-        chartmaker.createDoughnut("compare" + candidateJSON[0].candidate_id, candidateJSON[0].candidate_score, "compare");
+        chartmaker.createDoughnut("compare" + candidateJSON.candidate_id, candidateJSON.candidate_score, "compare");
         selected = false;
       });
     }
@@ -241,7 +303,7 @@ document.getElementById("compareContainer").addEventListener("click", (event)=>{
       otherSide = document.getElementById("compareLeft");
     }
     if (otherSide.firstElementChild.tagName != "BUTTON"){
-      for(let i = 1; i < newList.children.length; i++){
+      for(let i = newList.children.length - 1; i > 0; i--){
         let cbox = newList.children[i];
         if(cbox.style.pointerEvents == "none"){
           cbox.style.backgroundColor = "#FFFFFF";
@@ -424,30 +486,62 @@ document.getElementById("compareContainer").addEventListener("click", (event)=>{
       
       container.classList.remove("textDisplay");
       container.classList.add("barDisplay");
-      
     }
   }
-  
+});
+
+//resets candidates on comparison page
+function resetComparison(){
+  document.querySelectorAll(".compareBox").forEach(element => {
+    element.innerHTML = "";
+    let button = document.createElement("button");
+    button.classList.add("selectCandidate");
+    button.innerHTML = "Select Candidate";
+    element.appendChild(button);
+  });
+}
+
+document.getElementById("resetCandidates").addEventListener("click", ()=>{
+  resetComparison();
 });
 
 //buttons for the header links
 document.querySelectorAll(".candidateListButton").forEach(element => element.addEventListener("click", ()=>{
-  document.getElementById("main").style.display = "none";
+  document.getElementById("startup").style.display = "none";
   document.getElementById("results").style.display = "none";
   document.getElementById("list").style.display = "initial";
   document.getElementById("comparison").style.display = "none";
+  resetComparison();
 }));
 
 document.querySelectorAll(".compareCandsButton").forEach(element => element.addEventListener("click", ()=>{
-  document.getElementById("main").style.display = "none";
+  document.getElementById("startup").style.display = "none";
   document.getElementById("results").style.display = "none";
   document.getElementById("list").style.display = "none";
   document.getElementById("comparison").style.display = "initial";
 }));
 
 document.querySelectorAll(".newInterviewButton").forEach(element => element.addEventListener("click", ()=>{
-  document.getElementById("main").style.display = "initial";
+  document.getElementById("startup").style.display = "initial";
   document.getElementById("results").style.display = "none";
   document.getElementById("list").style.display = "none";
   document.getElementById("comparison").style.display = "none";
+  document.getElementById("newBtn").innerHTML = "Get Started<div id='loader'></div>";
+  resetComparison();
 }));
+
+//deletes candidate when user clicks on delete candidate button and returns them to list
+document.getElementById("deleteCandidate").addEventListener("click", (event)=>{
+  let container = event.target.closest("#resultsTop");
+  for(let i = 0; i < container.children.length; i++){
+    if (container.children[i].id == "candidateId"){
+      cand.deleteCandidate(container.children[i].innerHTML).then(()=>{
+        document.getElementById("startup").style.display = "none";
+        document.getElementById("results").style.display = "none";
+        document.getElementById("list").style.display = "initial";
+        document.getElementById("comparison").style.display = "none";
+        cand.deleteCandidateRow(container.children[i].innerHTML);
+      });
+    }
+  }
+});

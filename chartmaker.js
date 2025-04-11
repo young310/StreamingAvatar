@@ -23,7 +23,7 @@ export function createDoughnut(uniqueId, candidateScore, location){
         font_size = 16;
     }
     
-    new Chart(document.getElementById(`${uniqueId}`), {
+    const myDoughnutChart = new Chart(document.getElementById(`${uniqueId}`), {
     type: "doughnut",
     data: {
         datasets: [{
@@ -69,41 +69,44 @@ export function createDoughnut(uniqueId, candidateScore, location){
     color: "#000000"
     }
   })
+  
+  return myDoughnutChart;
 }
 
 //Radar chart code
 export function createRadarChart(uniqueId, data){
-const myRadarChart = new Chart(document.getElementById(`${uniqueId}`), {
-    type: 'radar',
-    data: {
-        labels: ["Education", "Soft Skills", "Interview Behavior", "Experience", "Technical Skills"],
-        datasets: [{
-            "data": data,
-            "backgroundColor": "rgba(0, 123, 255, 0.6)"
-        }]
-    },
-    options: {
-        responsive: false,
-        scale: {
-            ticks: {
-                min: 0,
-                max: 5,
-                stepSize: 1,
-                display: false
-            },
-            pointLabels:{
-            fontColor: "#FFFFFF",
-            },
-            gridLines: {
-            color: '#FFFFFF'
-            },
-            angleLines: {
-            color: '#FFFFFF'
-            }
+    const myRadarChart = new Chart(document.getElementById(`${uniqueId}`), {
+        type: 'radar',
+        data: {
+            labels: ["Education", "Soft Skills", "Interview Behavior", "Experience", "Technical Skills"],
+            datasets: [{
+                "data": data,
+                "backgroundColor": "rgba(0, 123, 255, 0.6)"
+            }]
         },
-        legend:{
-        display: false,
+        options: {
+            responsive: true,
+            scale: {
+                ticks: {
+                    min: 0,
+                    max: 5,
+                    stepSize: 1,
+                    display: false
+                },
+                pointLabels:{
+                fontColor: "#FFFFFF",
+                },
+                gridLines: {
+                color: '#FFFFFF'
+                },
+                angleLines: {
+                color: '#FFFFFF'
+                }
+            },
+            legend:{
+            display: false,
+            },
         },
-    },
-});
+    });
+    return myRadarChart;
 }

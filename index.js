@@ -23,10 +23,8 @@ var responseArray = [];
 var responseCount = 0;
 // let subSentences = [];
 
-
 //keeps track of all the candidates in the database
 let preCand = await cand.fetchAllCandidates();
-console.log(preCand);
 if(preCand.length != 0){
   for(let i = 0; i < preCand.length; i++){
     //creates rows on the table based on pre-existing candidate data
@@ -81,10 +79,12 @@ async function createNewSession() {
 
   updateStatus(statusElement, 'Session creation completed');
   updateStatus(statusElement, 'Now. You can click the start button to start the stream');
+  document.getElementById("startBtn").click();
 }
 
 // Start session and display audio and video when clicking the "Start" button
 async function startAndDisplaySession() {
+  console.log("hello");
 
   document.getElementById("badcode").innerHTML = "playing";
 
@@ -127,6 +127,10 @@ async function startAndDisplaySession() {
   });
 
    updateStatus(statusElement, 'Session started successfully');
+
+  
+  document.getElementById("main").style.display = "initial";
+  document.getElementById("startup").style.display = "none";
 }
 
 const taskInput = document.querySelector('#taskInput');
@@ -425,27 +429,34 @@ async function closeConnectionHandler() {
   let eduscore = responseJSON.report.scores.educational_background.score;
   let bescore = responseJSON.report.scores.interview_behavior.score;
 
-  
-  //creates report that appears immediately after interview
-  cand.createReportSummary(name, applyingFor, strengths, weaknesses, fit);
-  cand.createReportDetails(technical, work, soft, education, behavior, summary);
-  cand.createReportCharts([eduscore, softscore, bescore, workscore, techscore], score);
-
   //updates the SQL databases
   let currentDate = new Date();
   let formattedDate = currentDate.toISOString().slice(0, 19).replace('T', ' ');
 
   let candidate_id = await cand.createCandidateData(name, applyingFor, formattedDate, score);
-  console.log(candidate_id);
   await cand.updateCandidateReport(candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit);
   await cand.updateScoreReport(candidate_id, techscore, workscore, softscore, eduscore, bescore);
+
+  //creates report for the candidate
+  cand.createReportSummary(candidate_id, name, applyingFor, strengths, weaknesses, fit);
+  cand.createReportDetails(technical, work, soft, education, behavior, summary);
+  cand.createReportCharts([eduscore, softscore, bescore, workscore, techscore], score);
 
   //creates the candidate in the list
   cand.createCandidateRow(name, applyingFor, formattedDate, score, candidate_id);
 
-
   //updates the preCand array
   preCand = await cand.fetchAllCandidates();
+
+  //adds the ranking to the report
+  let sortFiltered = cand.filterCandidates(preCand, applyingFor);
+  let rank = 0;
+  for(let i = 0; i < sortFiltered.length; i++){
+    if (sortFiltered[i].candidate_id == candidate_id){
+      rank = i+1;
+    }
+  }
+  document.getElementById("resultsRank").innerHTML = `<i>ranked #${rank} in ${applyingFor}</i>`;
 }
 
 
@@ -476,7 +487,7 @@ document.getElementById("candidateTable").addEventListener("click", (event)=>{
         }
       }
       document.getElementById("resultsRank").innerHTML = `<i>ranked #${rank} in ${pcand.applying_for}</i>`
-      cand.createReportSummary(pcand.candidate_name, pcand.applying_for, prep.strengths, prep.weaknesses, prep.fit);
+      cand.createReportSummary(pcand.candidate_id, pcand.candidate_name, pcand.applying_for, prep.strengths, prep.weaknesses, prep.fit);
       cand.createReportDetails(prep.technical_skills, prep.work_experience, prep.soft_skills, prep.education, prep.behavior, prep.summary);
       cand.createReportCharts([pscore.edu_score, pscore.soft_score, pscore.behav_score, pscore.work_score, pscore.tech_score], pcand.candidate_score);
     })

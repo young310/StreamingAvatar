@@ -16,53 +16,66 @@
   <body>
     <!-- <button id="changepage">changepage</button> -->
     <p id="subs"></p>
+    <div id="startup">
+      <header>
+        <p id="webTitle">HR Portal</p>
+        <div id="links">
+          <a class="newInterviewButton">New Interview</a>
+          <a class="candidateListButton">Candidate List</a>
+          <a class="compareCandsButton">Compare Candidates</a>
+        </div>
+      </header>
+      <div id="startBody">
+        <div id="startText">
+          <h1>AI Interviewer</h1>
+          <p>Your personal AI interviewer — no pressure, just progress</p>
+          <button id="newBtn">Get Started<div id="loader"></div></button>
+          <button id="startBtn">Load Wayne</button>
+        </div>
+        <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?q=80&w=2073&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D">
+      </div>
+    </div>
     <div id="main" style="display: none;">
         <p style="display:none;" id="badcode">beginning</p>
         <video class="bigVid" id="mediaElement" autoplay></video>
-        <div id="leftButtons">
-          <button id="newBtn">New</button>
-          <button id="startBtn">Start</button>
-          <button id="closeBtn">Close</button>
-          <button id="speachBtn">Speech</button>
-        </div>
-
+        
         <div id="statusBlock">
-            <label>
+            <label style="display: none;">
                 AvatarID
                 <input id="avatarID" type="text" value="Wayne_20240711"/>
             </label>
     
-            <label>
+            <label style="display: none;">
                 VoiceID
                 <input id="voiceID" type="text" />
             </label>
 
-            <label>
-                Language
-                <select style="width: 8vw;" name="languageDrop" id="languageDrop">
-                    <option value="English">English</option>
-                    <option value="Chinese">Chinese</option>
-                    <option value="Japanese">Japanese</option>
-                    <option value="German">German</option>
-                    <option value="French">French</option>
-                    <option value="Spanish">Spanish</option>
-                    <option value="Italian">Italian</option>
-                </select>
+            <label for="languageDrop">
+              <select name="languageDrop" id="languageDrop">
+                  <option value="English">English</option>
+                  <option value="Chinese">中文</option>
+                  <option value="Japanese">日文</option>
+                  <option value="German">Deutsch</option>
+                  <option value="French">Français</option>
+                  <option value="Spanish">Español</option>
+                  <option value="Italian">Italiano</option>
+              </select>
             </label>  
-            <label>
-              Message
-              <input id="taskInput" type="text" />
-            </label>
-            <button id="repeatBtn">Repeat</button>
-            <button id="talkBtn">Talk</button>
-
-            <p style="color: yellow;" id="status"></p>
-            <div style="color: yellow;" id="output"></div>
+            <input id="taskInput" placeholder="Hello, what would you like to talk about today?" type="text" />
+            <div id="buttonSwitch">
+              <button id="speachBtn"><img width="25%" src="https://cdn-icons-png.flaticon.com/128/709/709682.png"></button>
+              <button id="talkBtn">Send</button>
+              <button id="endSpeech"><img width="25%" src="https://cdn-icons-png.flaticon.com/128/10413/10413984.png"></button>
+            </div>
+            <button style="display: none;" id="repeatBtn">Repeat</button>
+            <button style="display: none;" id="closeBtn">Repeat</button>
         </div>
+
+        <p style="color: yellow; background-color: rgb(0,0,0,0.3); padding: 0.5vw;" id="status"></p>
     </div>
 
 
-    <div id="results" style="display: none">
+    <div id="results" style="display: none;">
       <header>
         <p id="webTitle">HR Portal</p>
         <div id="links">
@@ -72,12 +85,16 @@
         </div>
       </header>
 
+      
+
       <div id="resultsTop">
+        <p id="candidateId" style="display: none;">candidateId</p>
         <div>
           <h1 id="candidateName">Jeremy Johnson</h1>
           <p id="resultsRank"><i>ranked #10 in Frontend Design</i></p>
         </div>
         <canvas id="reportDoughnut" style="width: 23%; max-width: 11vw;"></canvas>
+        <button id="deleteCandidate">Delete Candidate</button>
       </div>
 
       <div id="reportMain">
@@ -128,7 +145,7 @@
         </div>
     </div>
 
-    <div id="list">
+    <div id="list" style="display: none;">
       <header>
         <p id="webTitle">HR Portal</p>
         <div id="links">
@@ -163,6 +180,7 @@
         </div>
       </header>
       <h1>Compare Candidates</h1>
+      <button id="resetCandidates">Reset Candidates</button>
       <div id="compareContainer">
         <div class="compareBox barDisplay" id="compareLeft">
           <button class="selectCandidate">Select Candidate</button>

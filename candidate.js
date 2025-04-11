@@ -107,6 +107,21 @@ export const fetchReportScores = async (candidate_id) => {
     }
 };
 
+export const deleteCandidate = async (candidate_id) => {
+    try {
+        const response = await fetch('http://localhost:3000/api/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidate_id })
+        });
+
+        const data = await response.json();
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+};
+
 //creates a new candidate row on the candidate list
 export function createCandidateRow(candidateName, applyingFor, applicationDate, score, candidate_id){
     let newRow = document.createElement("div");
@@ -159,7 +174,17 @@ export function createCandidateRow(candidateName, applyingFor, applicationDate, 
     document.getElementById("candidateTable").appendChild(newRow);
   
     chartmaker.createDoughnut("list" + candidate_id, score, "list");
-  }
+}
+
+//deletes a candidate row from the list
+export function deleteCandidateRow(candidate_id){
+    let candList = document.getElementById("candidateTable");
+    for(let i = 0; i < candList.children.length; i++){
+        if (candList.children[i].id == candidate_id){
+            candList.removeChild(candList.children[i]);
+        }
+    }   
+}
   
 //sorts all candidates based on their score
 export function sortCandidates(allCandidates){
@@ -179,7 +204,8 @@ export function filterCandidates(allCandidates, filter){
 }
 
 
-export function createReportSummary(name, applyingFor, strengths, weaknesses, fit){
+export function createReportSummary(candidateId, name, applyingFor, strengths, weaknesses, fit){
+    document.getElementById("candidateId").innerHTML = candidateId;
     document.getElementById("candidateName").innerHTML = name;
     document.getElementById("role").innerHTML = "Applying For: " + applyingFor;
     document.getElementById("strengths").innerHTML = strengths;
@@ -196,7 +222,16 @@ export function createReportDetails(technical, work, soft, education, behavior, 
     document.getElementById("summary").innerHTML = summary;
 }
 
+
+let tempRadarChart; //saves the current chart so it can be deleted in the future
+let tempDoughnut;
 export function createReportCharts(data, score){
-    chartmaker.createRadarChart('myRadarChart', data);
-    chartmaker.createDoughnut('reportDoughnut', score, "report");
+    if(tempRadarChart != null){
+        tempRadarChart.destroy(); //deletes the chart before it's redrawn with new data
+    }
+    tempRadarChart = chartmaker.createRadarChart('myRadarChart', data);
+    if(tempDoughnut != null){
+        tempDoughnut.destroy();
+    }
+    tempDoughnut = chartmaker.createDoughnut('reportDoughnut', score, "report");
 }

@@ -6,13 +6,13 @@ app.use(express.json());
 var threadId;
 var threadByUser;
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: "",
   defaultHeaders: { 'OpenAI-Beta': 'assistants=v2' }
 });
 // const threadId = createThread().then(thread => {return thread.id;});
 const model='gpt-4o-mini';
 const thread = openai.beta.threads.create()
-const assistantId = 'asst_fYUd3VKbFhtLxJqiOuApkQwP';
+const assistantId = 'asst_am6thWTJTh4pbt8294O8nXc5';
 let pollingInterval;
 const systemSetup = "you are a recruiter from 勤業眾信, \
 we are looking for a software engineer to join our team. \

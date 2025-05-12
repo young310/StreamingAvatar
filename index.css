@@ -1,6 +1,8 @@
 * {
   padding: 0;
   margin: 0;
+  box-sizing: border-box;
+  font-size: 1vw;
 }
 
 
@@ -12,6 +14,85 @@
   height: 100%;
   overflow: hidden;
 }
+
+#startup{
+  width: 100vw;
+  height: 100vh;
+
+  background-color: #111111;
+  font-family:"Open Sans";
+}
+
+#startLogo{
+  width: 15vw;
+}
+
+#startText{
+  padding-top: 20vh;
+  padding-left: 2vw;
+
+  display: flex;
+  flex-direction: column;
+  gap:2vh;
+  
+  height: auto;
+  width: auto;
+}
+
+#startup h1{
+  font-size: 3.5em;
+  color: white;
+}
+
+#startup p{
+  font-size: 1.5em;
+  color: white;
+  margin-bottom: 2vh;
+}
+
+#newBtn{
+  display: flex;
+  flex-direction: row;
+  gap: 1vw;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1vh;
+  padding: 1.5vh;
+  width: 13vw;
+  height: 7vh;
+  font-size: 1.2em;
+}
+
+@keyframes e-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#loader{
+  display: none;
+  width: 1vw;
+  height: 1vw;
+  border: 0.2vw solid #ffffff;
+  border-top: 0.16vw solid #4caf50;
+  border-radius: 50%;
+  animation: e-spin 0.5s linear both infinite;
+}
+
+#startBtn{
+  display: none;
+}
+
+#cutImg{
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100vh;
+}
+
 
 button{
   width: 9vw;
@@ -33,68 +114,98 @@ button:hover{
   background-color: #439b47;
 }
 
-#newBtn{
-  position: absolute;
-  top: 5vh;
-  left: 1vw;
-}
-
-#startBtn{
-  position: absolute;
-  top: 13vh;
-  left: 1vw;
+#main{
+  display: initial;
 }
 
 #closeBtn{
+  display: none;
   position: absolute;
   top: 21vh;
   left: 1vw;
 }
 
-#speachBtn{
+#interrupt{
   position: absolute;
-  top: 29vh;
+  top: 45vh;
   left: 1vw;
+  background-color: rgb(228, 148, 0);
 }
 
 #statusBlock{
   position: absolute;
-  height: auto;
-  width: 15vw;
-  top: 5vh;
-  left: 83vw;
+  height: 10vh;
+  width: 100vw;
+  top: 90vh;
+  left: 0;
 
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   justify-content: flex-start;
-  gap: 2vh;
+  gap: 2.5vw;
 
-  border-style: solid;
-  border-width: 0.1vw;
-  border-color: rgb(176, 176, 176);
-  border-radius: 1.2vw;
-
-  background-color: rgba(0,0,0,0.3);
+  background-color: rgb(38, 38, 38, 0.5);
   color: white;
 
   padding: 0.5vw;
 }
 
-input{
-  width: 15vw;
+select{
+  font-size: 1.1em;
+  margin-left: 1vw;
 }
 
 #statusBlock button{
-  width: auto;
+  width: 3vw;
   height: auto;
+  background-color: none;
+  background: none;
+}
+
+#taskInput{
+  width: 80vw;
+  height: 5vh;
+  border-radius: 2vw;
+  border-style: hidden;
+  padding-left: 1vw;
+  font-size: 1.1em;
+}
+
+::placeholder{
   color: black;
+  opacity: 0.3;
+}
+
+#status{
+  position: absolute;
+  right: 2vw;
+  top: 2vh; 
+}
+
+#talkBtn{
+  display: none;
+}
+
+#speechBtn{
+  width: auto;
   background-color: white;
-  border-radius: 0;
-  padding: 0.5vh;
-  border-style: solid;
-  border-color: black;
-  border-width: 0.1vh;
-  font-size: 0.8em;
+  background: center;
+}
+
+#spchImg{
+  width: 5vw;
+  transition-duration: 0.3s;
+}
+
+#spchImg:hover{
+  width: 5.5vw;
+}
+
+#endSpeech{
+  position: absolute;
+  background-color: red;
+  display: none;
 }
 
 #qrBlock{
@@ -120,4 +231,15 @@ input{
 
 #qrBlock h1{
   font-size: 1.6em;
+}
+
+#subs{
+  position: absolute;
+  top: 85%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  color: white;
+  font-size: 2em;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }

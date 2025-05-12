@@ -1,7 +1,7 @@
 'use strict';
 
 const heygen_API = {
-  apiKey: '',
+  apiKey: 'ZTgyMzdiZDM5YzBhNGI0YThiYjY2YTUzMGY0OGU3YzUtMTczNDYwMDQ2Mg==',
   serverUrl: 'https://api.heygen.com',
 };
 
@@ -63,12 +63,12 @@ async function createNewSession() {
 
   updateStatus(statusElement, 'Session creation completed');
   updateStatus(statusElement, 'Now.You can click the start button to start the stream');
+
+  document.getElementById('startBtn').click();
 }
 
 // Start session and display audio and video when clicking the "Start" button
 async function startAndDisplaySession() {
-
-  document.getElementById("badcode").innerHTML = "playing";
 
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -108,12 +108,15 @@ async function startAndDisplaySession() {
     receiver.jitterBufferTarget = 500
   });
 
-   updateStatus(statusElement, 'Session started successfully');
+  updateStatus(statusElement, 'Session started successfully');
+
+  document.getElementById("main").style.display = "initial";
+  document.getElementById("startup").style.display = "none";
 }
 
 const taskInput = document.querySelector('#taskInput');
 
-// When clicking the "Send Task" button, get the content from the input field, then send the tas
+// When clicking the "Send Task" button, get the content from the input field, then send the task
 async function repeatHandler() {
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -152,6 +155,7 @@ async function talkHandler() {
       // Send the AI's response to Heygen's streaming.task API
       const resp = await repeat(sessionInfo.session_id, text);
       updateStatus(statusElement, 'LLM response sent successfully');
+
     } else {
       updateStatus(statusElement, 'Failed to get a response from AI');
     }
@@ -164,8 +168,6 @@ async function talkHandler() {
 
 // when clicking the "Close" button, close the connection
 async function closeConnectionHandler() {
-
-  document.getElementById("badcode").innerHTML = "not playing";
 
   if (!sessionInfo) {
     updateStatus(statusElement, 'Please create a connection first');
@@ -339,37 +341,6 @@ async function stopSession(session_id) {
   }
 }
 
-/*
-const removeBGCheckbox = document.querySelector('#removeBGCheckbox');
-removeBGCheckbox.addEventListener('click', () => {
-  const isChecked = removeBGCheckbox.checked; // status after click
-
-  if (isChecked && !sessionInfo) {
-    updateStatus(statusElement, 'Please create a connection first');
-    removeBGCheckbox.checked = false;
-    return;
-  }
-
-  if (isChecked && !mediaCanPlay) {
-    updateStatus(statusElement, 'Please wait for the video to load');
-    removeBGCheckbox.checked = false;
-    return;
-  }
-
-  if (isChecked) {
-    hideElement(mediaElement);
-    showElement(canvasElement);
-
-    renderCanvas();
-  } else {
-    hideElement(canvasElement);
-    showElement(mediaElement);
-
-    renderID++;
-  }
-});
-*/
-
 let renderID = 0;
 function renderCanvas() {
   if (!removeBGCheckbox.checked) return;
@@ -441,16 +412,3 @@ mediaElement.onloadedmetadata = () => {
 
   // showElement(bgCheckboxWrap);
 };
-
-/*
-const canvasElement = document.querySelector('#canvasElement');
-
-const bgCheckboxWrap = document.querySelector('#bgCheckboxWrap');
-const bgInput = document.querySelector('#bgInput');
-
-bgInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    renderCanvas();
-  }
-});
-*/

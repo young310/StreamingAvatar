@@ -3,17 +3,11 @@ import * as cand from './candidate.js';
 import * as chartmaker from './chartmaker.js';
 
 const heygen_API = {
-  apiKey: '',
-  serverUrl: 'https://api.heygen.com',
+  // Use server-side proxy; no API key in browser
+  serverUrl: '/heygen',
 };
-
 const statusElement = document.querySelector('#status');
-const apiKey = heygen_API.apiKey;
 const SERVER_URL = heygen_API.serverUrl;
-
-if (apiKey === 'YourApiKey' || SERVER_URL === '') {
-  alert('Please enter your API key and server URL in the api.json file');
-}
 
 let sessionInfo = null;
 let peerConnection = null;
@@ -206,7 +200,6 @@ async function newSession(quality, avatar_name, voice_id) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({
       quality,
@@ -237,7 +230,6 @@ async function startSession(session_id, sdp) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id, sdp }),
   });
@@ -260,7 +252,6 @@ async function handleICE(session_id, candidate) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id, candidate }),
   });
@@ -321,7 +312,6 @@ async function repeat(session_id, text) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id, text }),
   });
@@ -344,7 +334,6 @@ async function stopSession(session_id) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id }),
   });

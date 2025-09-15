@@ -5,8 +5,18 @@ const app = express();
 app.use(express.json());
 var threadId;
 var threadByUser;
+const openaiApiKey = process.env.OPENAI_API_KEY;
+if (!openaiApiKey) {
+  console.error('Error: OPENAI_API_KEY environment variable is not set.');
+  process.exit(1);
+}
+// Read HeyGen API key for server-side proxying
+const heygenApiKey = process.env.HEYGEN_API_KEY;
+if (!heygenApiKey) {
+  console.warn('Warning: HEYGEN_API_KEY environment variable is not set. HeyGen API calls will fail unless a key is provided.');
+}
 const openai = new OpenAI({
-  apiKey: "",
+  apiKey: openaiApiKey,
   defaultHeaders: { 'OpenAI-Beta': 'assistants=v2' }
 });
 // const threadId = createThread().then(thread => {return thread.id;});
@@ -59,6 +69,42 @@ async function checkingStatus(res, threadId, runId) {
 
 
 app.use(express.static(path.join(__dirname, '.')));
+
+// Proxy HeyGen API through the server so the browser does not need the key
+app.all('/heygen/*', async (req, res) => {
+  try {
+    if (!heygenApiKey) {
+      res.status(500).json({ error: 'HEYGEN_API_KEY not configured on server' });
+      return;
+    }
+
+    const upstreamBase = 'https://api.heygen.com';
+    const upstreamPath = req.originalUrl.replace(/^\/heygen/, '');
+    const targetUrl = upstreamBase + upstreamPath;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Api-Key': heygenApiKey,
+    };
+
+    const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
+    const response = await fetch(targetUrl, {
+      method: req.method,
+      headers,
+      body: hasBody ? JSON.stringify(req.body ?? {}) : undefined,
+    });
+
+    // Pass through status and content-type
+    const contentType = response.headers.get('content-type') || 'application/json';
+    res.status(response.status);
+    res.set('content-type', contentType);
+    const text = await response.text();
+    res.send(text);
+  } catch (err) {
+    console.error('Error proxying HeyGen request:', err);
+    res.status(502).json({ error: 'Bad gateway to HeyGen' });
+  }
+});
 
 // app.post('/openai/complete', async (req, res) => {
 //   try {
@@ -337,4 +383,3 @@ app.post("/api/delete", (req, res) =>{
 app.listen(3000, function () {
     console.log('App is listening on port 3000!');
 });
-

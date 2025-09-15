@@ -12,7 +12,7 @@ const openai = new OpenAI({
 // const threadId = createThread().then(thread => {return thread.id;});
 const model='gpt-4o-mini';
 const thread = openai.beta.threads.create()
-const assistantId = 'asst_am6thWTJTh4pbt8294O8nXc5';
+const assistantId = 'asst_PZKZ4PBkWQVIoNSPoFJ5QtC5';
 let pollingInterval;
 const systemSetup = "You are the Workplace Wellbeing Ambassador for Deloitte Taiwan. \
 Your job is to provide a safe, confidential, and supportive space for employees to share any workplace concerns, such as bullying, exclusion, or stress. \

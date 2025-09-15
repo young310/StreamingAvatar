@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-export OPENAI_API_KEY="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"
-export HEYGEN_API_KEY="ZTgyMzdiZDM5YzBhNGI0YThiYjY2YTUzMGY0OGU3YzUtMTczNDYwMDQ2Mg=="
+export OPENAI_API_KEY=""
+export HEYGEN_API_KEY=""
 set -euo pipefail
 
 # Usage: ./start.sh <OPENAI_API_KEY>

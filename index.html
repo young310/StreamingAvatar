@@ -57,6 +57,7 @@
       <button id="speachBtn"><img id="spchImg" src="images/speech.png"></button>
       <button id="endSpeech"><img style="width: 5vw;" src="images/stap.png" /></button>
       <button id="talkBtn"><img style="width: 5vw;" src="images/send_white.png" /></button>
+      <button id="resetBtn" title="重新開始對話">🔄</button>
       <button style="display: none;" id="repeatBtn">Repeat</button>
       <button style="display: none;" id="closeBtn">Repeat</button>
     </div>
@@ -122,6 +123,7 @@
     const taskInput = document.getElementById('taskInput');
     const talkBtn = document.getElementById('talkBtn');
     const endBtn = document.getElementById('endSpeech');
+    const resetBtn = document.getElementById('resetBtn');
     recognition.onstart = () => {
       startButton.textContent = 'Listening...';
     };
@@ -153,6 +155,34 @@
       recognition.stop();
       endBtn.style.display = "none";
       startButton.style.display = "initial";
+    });
+
+    // 重置對話功能
+    resetBtn.addEventListener('click', async ()=>{
+      try {
+        const response = await fetch('http://localhost:3000/openai/reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Conversation reset:', data.message);
+          // 清空輸入框
+          taskInput.value = '';
+          // 可以添加視覺反饋
+          resetBtn.textContent = '✅';
+          setTimeout(() => {
+            resetBtn.textContent = '🔄';
+          }, 1000);
+        } else {
+          console.error('Failed to reset conversation');
+        }
+      } catch (error) {
+        console.error('Error resetting conversation:', error);
+      }
     })
 
     let typing = false;

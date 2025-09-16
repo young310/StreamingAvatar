@@ -1,214 +1,267 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css" />
-    <link rel="icon" href="./favicon.ico" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
-    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="index.css" />
+  <link rel="icon" href="./favicon.ico" />
 
-  <body>
-    <p id="subs"></p>
-    <div id="startup">
-      <img id="startLogo" src="images/logo_white.png">
-      <div id="startText">
-        <h1>Workplace Guardian</h1>
-        <p>Supporting a Safer, Healthier Deloitte Workplace</p>
-        <button id="newBtn">Get Started<div id="loader"></div></button>
-        <button id="startBtn">Load Wayne</button>
-      </div>
-      <img id="cutImg" src="images/smiley_cut.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet">
+  <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+</head>
+
+<body>
+  <p id="subs"></p>
+  <div id="startup">
+    <img id="startLogo" src="images/logo_white.png">
+    <div id="startText">
+      <h1>Workplace Guardian</h1>
+      <p>Supporting a Safer, Healthier Deloitte Workplace</p>
+      <button id="newBtn">Get Started<div id="loader"></div></button>
+      <button id="startBtn">Load Wayne</button>
     </div>
-    <div id="main" style="display: none;">
-        <p style="display:none;" id="badcode">beginning</p>
-        <video class="bigVid" id="mediaElement" autoplay></video>
-        
+    <img id="cutImg" src="images/smiley_cut.png">
+  </div>
+  <div id="main" style="display: none;">
+    <p style="display:none;" id="badcode">beginning</p>
+    <video class="bigVid" id="mediaElement" autoplay></video>
 
-        <div id="statusBlock">
-            <label style="display: none;">
-                AvatarID
-                <input id="avatarID" type="text" value="June_HR_public"/>
-            </label>
-    
-            <label style="display: none;">
-                VoiceID
-                <input id="voiceID" type="text" value="1a9bfb4ec9bc43d59ab64a4e66fe467c"/>
-            </label>
 
-            <label for="languageDrop">
-              <select name="languageDrop" id="languageDrop">
-                  <option value="English">English</option>
-                  <option value="Chinese">中文</option>
-                  <option value="Japanese">日文</option>
-                  <option value="German">Deutsch</option>
-                  <option value="French">Français</option>
-                  <option value="Spanish">Español</option>
-                  <option value="Italian">Italiano</option>
-              </select>
-            </label>  
-            <input id="taskInput" placeholder="Hello, what would you like to talk about today?" type="text" />
-            <button id="speachBtn"><img id="spchImg" src="images/speech.png"></button>
-            <button id="endSpeech"><img style="width: 5vw;" src="images/stap.png"/></button>
-            <button id="talkBtn"><img style="width: 5vw;" src="images/send_white.png"/></button>
-            <button style="display: none;" id="repeatBtn">Repeat</button>
-            <button style="display: none;" id="closeBtn">Repeat</button>
-        </div>
+    <div id="statusBlock">
+      <label style="display: none;">
+        AvatarID
+        <input id="avatarID" type="text" value="June_HR_public" />
+      </label>
 
-        <p style="color: yellow; background-color: rgb(0,0,0,0.3); padding: 0.5vw;" id="status"></p>
+      <label style="display: none;">
+        VoiceID
+        <input id="voiceID" type="text" value="1a9bfb4ec9bc43d59ab64a4e66fe467c" />
+      </label>
 
-        <div id="qrBlock">
-          <h1>Scan to access Deloitte's career website</h1>
-          <!-- <div id="qrCode"></div> -->
-        </div>
+      <label for="languageDrop">
+        <select name="languageDrop" id="languageDrop">
+          <option value="Chinese">中文</option>
+          <option value="English">English</option>
+          <option value="Japanese">日文</option>
+          <option value="German">Deutsch</option>
+          <option value="French">Français</option>
+          <option value="Spanish">Español</option>
+          <option value="Italian">Italiano</option>
+        </select>
+      </label>
+      <input id="taskInput" placeholder="你好，你今天想聊些什麼？" type="text" />
+      <button id="speachBtn"><img id="spchImg" src="images/speech.png"></button>
+      <button id="endSpeech"><img style="width: 5vw;" src="images/stap.png" /></button>
+      <button id="talkBtn"><img style="width: 5vw;" src="images/send_white.png" /></button>
+      <button style="display: none;" id="repeatBtn">Repeat</button>
+      <button style="display: none;" id="closeBtn">Repeat</button>
     </div>
 
-    <script type="module" src="index.js"></script>
-    <!-- <script type="module" src="qrcode.js"></script> -->
-    <script>
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
-        
-        //determines recognition language based on dropdown selection
-        var selector = document.getElementById("languageDrop");
-        var selectedLang = selector.value;
+    <p style="color: yellow; background-color: rgb(0,0,0,0.3); padding: 0.5vw;" id="status"></p>
+    <p style="color: white; background-color: rgb(0,0,0,0.5); padding: 0.3vw; font-size: 0.8em; position: absolute; bottom: 10px; right: 10px;"
+      id="spaceKeyHint">Hold SPACE to talk</p>
+
+    <div id="qrBlock">
+      <h1>Scan to access Deloitte's career website</h1>
+      <!-- <div id="qrCode"></div> -->
+    </div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+  <!-- <script type="module" src="qrcode.js"></script> -->
+  <script>
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
+
+    //determines recognition language based on dropdown selection
+    var selector = document.getElementById("languageDrop");
+    var selectedLang = selector.value;
+    recognition.lang = "zh-TW";
+    recognition.continuous = true;
+    var transStore = [];
+
+    selector.addEventListener("change", function () {
+      var selectedLang = this.value;
+      console.log(selectedLang);
+      if (selectedLang == "Chinese") {
+        recognition.lang = "zh-TW";
+        taskInput.placeholder = "你好，你今天想聊些什麼？"
+      }
+      if (selectedLang == "English") {
         recognition.lang = "en-US";
-        recognition.continuous = true;
-        var transStore = [];
+        taskInput.placeholder = "Hello, what would you like to talk about today?"
+      }
+      if (selectedLang == "Japanese") {
+        recognition.lang = "ja";
+        taskInput.placeholder = "こんにちは、今日は何を話したいですか？"
+      }
+      if (selectedLang == "German") {
+        recognition.lang = "de";
+        taskInput.placeholder = "Hallo, worüber möchtest du heute sprechen?"
+      }
+      if (selectedLang == "French") {
+        recognition.lang = "fr";
+        taskInput.placeholder = "Bonjour, de quoi veux-tu parler aujourd'hui ?"
+      }
+      if (selectedLang == "Italian") {
+        recognition.lang = "it";
+        taskInput.placeholder = "Ciao, di cosa vuoi parlare oggi?"
+      }
+      if (selectedLang == "Spanish") {
+        recognition.lang = "es";
+        taskInput.placeholder = "Hola, ¿de qué te gustaría hablar hoy?"
+      }
+    });
 
-        selector.addEventListener("change", function(){
-          var selectedLang = this.value;
-          console.log(selectedLang);
-          if (selectedLang == "English"){
-            recognition.lang = "en-US";
-            taskInput.placeholder = "Hello, what would you like to talk about today?"
-          }
-          if (selectedLang == "Chinese"){
-            recognition.lang = "zh-TW";
-            taskInput.placeholder = "你好，你今天想聊些什麼？"
-          }
-          if (selectedLang == "Japanese"){
-            recognition.lang = "ja";
-            taskInput.placeholder = "こんにちは、今日は何を話したいですか？"
-          }
-          if (selectedLang == "German"){
-            recognition.lang = "de";
-            taskInput.placeholder = "Hallo, worüber möchtest du heute sprechen?"
-          }
-          if (selectedLang == "French"){
-            recognition.lang = "fr";
-            taskInput.placeholder = "Bonjour, de quoi veux-tu parler aujourd'hui ?"
-          }
-          if (selectedLang == "Italian"){
-            recognition.lang = "it";
-            taskInput.placeholder = "Ciao, di cosa vuoi parlare oggi?"
-          }
-          if (selectedLang == "Spanish"){
-            recognition.lang = "es";
-            taskInput.placeholder = "Hola, ¿de qué te gustaría hablar hoy?"
-          }
-        });
-        
-        
 
-        const startButton = document.getElementById('speachBtn');
-        const taskInput = document.getElementById('taskInput');
-        const talkBtn = document.getElementById('talkBtn');
-        const endBtn = document.getElementById('endSpeech');
-        recognition.onstart = () => {
-            startButton.textContent = 'Listening...';
-        };
 
-        recognition.onresult = (event) => {
-            const transcript = event.results[event.resultIndex][0].transcript;
-            transStore.push(transcript);
-        };
+    const startButton = document.getElementById('speachBtn');
+    const taskInput = document.getElementById('taskInput');
+    const talkBtn = document.getElementById('talkBtn');
+    const endBtn = document.getElementById('endSpeech');
+    recognition.onstart = () => {
+      startButton.textContent = 'Listening...';
+    };
 
-        recognition.onend = () =>{
-          startButton.textContent = 'Start Voice Input';
-          let allTrans = "";
-          for(let i = 0; i < transStore.length; i++){
-            allTrans += transStore[i];
-          }
-          taskInput.value = allTrans;
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.resultIndex][0].transcript;
+      transStore.push(transcript);
+    };
+
+    recognition.onend = () => {
+      startButton.textContent = 'Start Voice Input';
+      let allTrans = "";
+      for (let i = 0; i < transStore.length; i++) {
+        allTrans += transStore[i];
+      }
+      taskInput.value = allTrans;
+      talkBtn.click();
+      console.log(allTrans);
+      transStore = []
+    };
+
+    startButton.addEventListener('click', () => {
+      recognition.start();
+      endBtn.style.display = "initial";
+      startButton.style.display = "none";
+    });
+
+    endBtn.addEventListener('click', () => {
+      recognition.stop();
+      endBtn.style.display = "none";
+      startButton.style.display = "initial";
+    })
+
+    let typing = false;
+    let spaceKeyPressed = false;
+
+    //stuff that hides stuff
+    addEventListener("keydown", function (e) {
+      // 防止在輸入框中按空白鍵時觸發語音功能
+      if (e.target === taskInput) {
+        // 如果焦點在輸入框上，只處理 Enter 鍵
+        if (typing == true && e.key == "Enter") {
           talkBtn.click();
-          console.log(allTrans);
-          transStore = []
-        };
+        }
+        return;
+      }
 
-        startButton.addEventListener('click', () =>{
-          recognition.start();
-          endBtn.style.display = "initial";
-          startButton.style.display = "none";
-        });
+      //按住空白鍵開始語音輸入（只在對話畫面中有效）
+      if (e.key == " " && !spaceKeyPressed && document.getElementById("main").style.display !== "none") {
+        e.preventDefault(); // 防止頁面滾動
+        spaceKeyPressed = true;
+        startButton.click();
+      }
 
-        endBtn.addEventListener('click', ()=>{
-          recognition.stop();
-          endBtn.style.display = "none";
-          startButton.style.display = "initial";
-        })
+      //lets user start talking by pressing the "1" key
+      if (e.key == "1") {
+        startButton.click();
+      }
 
-        let typing = false;
+      //lets user click the 'end speech' button by pressing the "2" key
+      if (e.key == "2") {
+        endBtn.click();
+      }
 
-        //stuff that hides stuff
-        addEventListener("keydown", function(e){;
+      //lets user hide the status bar by pressing the "3" key
+      if (e.key == "3") {
+        var statusBlock = document.getElementById("statusBlock");
+        var leftButtons = document.getElementById("leftButtons");
+        if (statusBlock.style.display != "none" && leftButtons.style.display != "none") {
+          statusBlock.style.display = "none";
+          leftButtons.style.display = "none";
+        }
+        else {
+          statusBlock.style.display = "flex";
+          leftButtons.style.display = "initial";
+        }
+      }
 
-          //lets user start talking by pressing the "1" key
-          if(e.key == "1"){
-              startButton.click();
-            }
+      //let's the user input stuff via the Enter button if typing
+      if (typing == true && e.key == "Enter") {
+        talkBtn.click();
+      }
+    });
 
-            //lets user click the 'end speech' button by pressing the "2" key
-            if(e.key == "2"){
-              endBtn.click();
-            }
+    //放開空白鍵停止語音輸入
+    addEventListener("keyup", function (e) {
+      if (e.key == " " && spaceKeyPressed && document.getElementById("main").style.display !== "none") {
+        e.preventDefault();
+        spaceKeyPressed = false;
+        endBtn.click();
+      }
+    });
 
-            //lets user hide the status bar by pressing the "3" key
-            if(e.key == "3"){
-              var statusBlock = document.getElementById("statusBlock");
-              var leftButtons = document.getElementById("leftButtons");
-              if (statusBlock.style.display !="none" && leftButtons.style.display !="none"){
-                statusBlock.style.display = "none";
-                leftButtons.style.display = "none";
-              }
-              else{
-                statusBlock.style.display = "flex";
-                leftButtons.style.display = "initial";
-              }
-            }
+    //deals with transitions between send text, speech, and stop speech buttons
+    taskInput.addEventListener("input", () => {
+      if (taskInput.value == "") {
+        talkBtn.style.display = "none";
+        startButton.style.display = "initial";
+        typing = false;
+      }
+      else {
+        talkBtn.style.display = "initial";
+        startButton.style.display = "none";
+        typing = true;
+      }
+    })
 
-            //let's the user input stuff via the Enter button if typing
-            if(typing == true && e.key == "Enter"){
-              talkBtn.click();
-            }
-        });
 
-        //deals with transitions between send text, speech, and stop speech buttons
-        taskInput.addEventListener("input", ()=>{
-          if(taskInput.value == ""){
-            talkBtn.style.display = "none";
-            startButton.style.display = "initial";
-            typing = false;
+
+
+    //loads Wayne when new button "get started" is pressed
+    document.getElementById('newBtn').addEventListener("click", () => {
+      document.getElementById("newBtn").innerHTML = "Starting Up<div id='loader'></div>";
+      document.getElementById("loader").style.display = "initial";
+    });
+
+    // 確保空白鍵提示只在對話畫面顯示
+    const spaceKeyHint = document.getElementById('spaceKeyHint');
+    const mainDiv = document.getElementById('main');
+    const startupDiv = document.getElementById('startup');
+
+    // 監聽畫面切換
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          if (mainDiv.style.display === 'none') {
+            spaceKeyHint.style.display = 'none';
+          } else {
+            spaceKeyHint.style.display = 'block';
           }
-          else{
-            talkBtn.style.display = "initial";
-            startButton.style.display = "none";
-            typing = true;
-          }
-        })
-        
+        }
+      });
+    });
 
+    observer.observe(mainDiv, { attributes: true });
 
+    // 初始狀態隱藏提示
+    spaceKeyHint.style.display = 'none';
 
-        //loads Wayne when new button "get started" is pressed
-        document.getElementById('newBtn').addEventListener("click", ()=>{
-          document.getElementById("newBtn").innerHTML = "Starting Up<div id='loader'></div>";
-          document.getElementById("loader").style.display = "initial";
-        })
+  </script>
+</body>
 
-    </script>
-  </body>
 </html>

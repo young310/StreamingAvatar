@@ -1,72 +1,27 @@
 const express = require('express');
-const OpenAI = require('openai')
+const OpenAI = require('openai');
 const path = require('path');
 const app = express();
 app.use(express.json());
-var threadId;
-var threadByUser;
+
 const openaiApiKey = process.env.OPENAI_API_KEY;
 if (!openaiApiKey) {
   console.error('Error: OPENAI_API_KEY environment variable is not set.');
   process.exit(1);
 }
+
 // Read HeyGen API key for server-side proxying
 const heygenApiKey = process.env.HEYGEN_API_KEY;
 if (!heygenApiKey) {
   console.warn('Warning: HEYGEN_API_KEY environment variable is not set. HeyGen API calls will fail unless a key is provided.');
 }
+
 const openai = new OpenAI({
   apiKey: openaiApiKey,
   defaultHeaders: { 'OpenAI-Beta': 'assistants=v2' }
 });
-// const threadId = createThread().then(thread => {return thread.id;});
-const model='gpt-4o-mini';
-const thread = openai.beta.threads.create()
-const assistantId = 'asst_5VWcFrAbaPmgul37WDRPvrKi';
-let pollingInterval;
-const systemSetup = "you are a recruiter from 勤業眾信, \
-we are looking for a software engineer to join our team. \
-Please introduce yourself and tell me about your experience and skills. \"";
 
-// Set up a Thread
-async function createThread() {
-    console.log('Creating a new thread...');
-    const thread = await openai.beta.threads.create();
-    return thread;
-}
-
-async function addMessage(threadId, message) {
-    console.log('Adding a new message to thread: ' + threadId);
-    const response = await openai.beta.threads.messages.create(
-        threadId,
-        {
-            role: "user",
-            content: message
-        }
-    );
-    return response;
-}
-
-async function runAssistant(threadId) {
-    console.log('Running assistant for thread: ' + threadId)
-    const response = await openai.beta.threads.runs.create(
-        threadId,
-        { 
-          assistant_id: assistantId
-          // Make sure to not overwrite the original instruction, unless you want to
-        }
-      );
-
-    console.log(response)
-
-    return response;
-}
-
-async function checkingStatus(res, threadId, runId) {
-}
-
-
-
+const assistantId = 'asst_PZKZ4PBkWQVIoNSPoFJ5QtC5';
 
 app.use(express.static(path.join(__dirname, '.')));
 
@@ -88,11 +43,19 @@ app.all('/heygen/*', async (req, res) => {
     };
 
     const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
+    
+    // Add timeout and better error handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
       body: hasBody ? JSON.stringify(req.body ?? {}) : undefined,
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     // Pass through status and content-type
     const contentType = response.headers.get('content-type') || 'application/json';
@@ -102,116 +65,94 @@ app.all('/heygen/*', async (req, res) => {
     res.send(text);
   } catch (err) {
     console.error('Error proxying HeyGen request:', err);
-    res.status(502).json({ error: 'Bad gateway to HeyGen' });
-  }
-});
-
-// app.post('/openai/complete', async (req, res) => {
-//   try {
-//     const prompt = req.body.prompt;
-//     const chatCompletion = await openai.chat.completions.create({
-//       messages: [
-//         { role: 'system', content: systemSetup},
-//         { role: 'user', content: prompt }
-//       ],
-//       model: 'gpt-4o',
-//     });
-//     res.json({ text: chatCompletion.choices[0].message.content });
-//   } catch (error) {
-//     console.error('Error calling OpenAI:', error);
-//     res.status(500).send('Error processing your request');
-//   }
-// });
-
-app.post('/openai/complete', async (req, res) => {
-    // Create a new thread if it's the user's first message
-  if (!threadByUser) {
-    try {
-      const myThread = await openai.beta.threads.create();
-      console.log("New thread created with ID: ", myThread.id, "\n");
-      threadByUser = myThread.id; // Store the thread ID for this user
-    } catch (error) {
-      console.error("Error creating thread:", error);
-      res.status(500).json({ error: "Internal server error" });
-      return;
+    
+    if (err.name === 'AbortError') {
+      res.status(408).json({ error: 'Request timeout to HeyGen API' });
+    } else if (err.code === 'UND_ERR_CONNECT_TIMEOUT') {
+      res.status(504).json({ error: 'Connection timeout to HeyGen API' });
+    } else {
+      res.status(502).json({ error: 'Bad gateway to HeyGen' });
     }
   }
+});
 
-  const userMessage = req.body.prompt;
+// 全局變數來儲存 thread ID，確保整個對話使用同一個 thread
+let globalThreadId = null;
 
-  // Add a Message to the Thread
+app.post('/openai/complete', async (req, res) => {
   try {
-    const myThreadMessage = await openai.beta.threads.messages.create(
-      threadByUser, // Use the stored thread ID for this user
-      {
-        role: "user",
-        content: userMessage,
+    // 如果沒有全局 thread ID，創建一個新的
+    if (!globalThreadId) {
+      const myThread = await openai.beta.threads.create();
+      globalThreadId = myThread.id;
+      console.log("New thread created with ID:", globalThreadId);
+    } else {
+      console.log("Using existing thread ID:", globalThreadId);
+    }
+
+    const myThreadMessage = await openai.beta.threads.messages.create(globalThreadId, {
+      role: "user",
+      content: req.body.prompt,
+    });
+
+    const myRun = await openai.beta.threads.runs.create(globalThreadId, {
+      assistant_id: assistantId,
+    });
+
+    console.log("Run created:", myRun.id, "Status:", myRun.status);
+
+    // 輪詢直到完成或超時
+    let attempts = 0;
+    let run;
+    while (attempts < 60) {
+      run = await openai.beta.threads.runs.retrieve(globalThreadId, myRun.id);
+      console.log(`Run status: ${run.status} (attempt ${attempts + 1})`);
+      
+      if (run.status === "completed") break;
+      if (run.status === "failed") {
+        console.error("Run failed:", run.last_error);
+        throw new Error("Assistant run failed");
       }
-    );
-    console.log("This is the message object: ", myThreadMessage, "\n");
+      if (run.status === "cancelled") throw new Error("Assistant run cancelled");
+      
+      attempts++;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    
+    if (attempts >= 60) throw new Error("Assistant run timed out");
 
-    // Run the Assistant
-    const myRun = await openai.beta.threads.runs.create(
-      threadByUser, // Use the stored thread ID for this user
-      {
-        assistant_id: assistantId,
-      }
-    );
-    console.log("This is the run object: ", myRun, "\n");
+    // 取得最新訊息
+    const allMessages = await openai.beta.threads.messages.list(globalThreadId);
+    const latest = allMessages.data
+      .filter(m => m.role === "assistant")
+      .sort((a, b) => b.created_at - a.created_at)[0];
 
-    // Periodically retrieve the Run to check on its status
-    const retrieveRun = async () => {
-      let keepRetrievingRun;
+    if (!latest) {
+      throw new Error("No assistant response found");
+    }
 
-      while (myRun.status !== "completed") {
-        keepRetrievingRun = await openai.beta.threads.runs.retrieve(
-          threadByUser, // Use the stored thread ID for this user
-          myRun.id
-        );
-
-        console.log(`Run status: ${keepRetrievingRun.status}`);
-
-        if (keepRetrievingRun.status === "completed") {
-          console.log("\n");
-          break;
-        }
-      }
-    };
-    retrieveRun();
-
-    // Retrieve the Messages added by the Assistant to the Thread
-    const waitForAssistantMessage = async () => {
-      await retrieveRun();
-
-      const allMessages = await openai.beta.threads.messages.list(
-        threadByUser // Use the stored thread ID for this user
-      );
-
-      let AI_Response = allMessages.data[0].content[0].text.value;
-      let User_Response = myThreadMessage.content[0].text.value;
-
-      // Send the response back to the front end
-      //   res.status(200).json({
-      //     response: allMessages.data[0].content[0].text.value,
-      //   });
-      res.json({ text: AI_Response });
-      console.log("------------------------------------------------------------ \n");
-      console.log("User: ", User_Response);
-      console.log("Assistant: ", AI_Response);
-
-    };
-    waitForAssistantMessage();
+    console.log("Assistant response:", latest.content[0].text.value);
+    res.json({ threadId: globalThreadId, text: latest.content[0].text.value });
   } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error in /openai/complete:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-
-
+// 新增一個端點來重置對話（創建新的 thread）
+app.post('/openai/reset', async (req, res) => {
+  try {
+    const myThread = await openai.beta.threads.create();
+    globalThreadId = myThread.id;
+    console.log("New conversation started with thread ID:", globalThreadId);
+    res.json({ threadId: globalThreadId, message: "New conversation started" });
+  } catch (error) {
+    console.error("Error resetting conversation:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 //does the database things
-
 
 //code about connecting to the database
 const sqlite = require('sqlite3'); //adds sqlite functionality to code. Requires installation (npm install sqlite3)
@@ -256,7 +197,6 @@ db.serialize(()=>{
     FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
     )`);
 });
-
 
 //saves candidate data into sqlite database and returns a unique candidate id
 app.post("/api/candidates", (req, res) => {
@@ -333,7 +273,6 @@ app.get("/api/candidates/:id", (req, res) => {
   })
 });
 
-
 //look for report from specific candidate
 app.get("/api/reports", (req, res) => {
   const { candidate_id } = req.query;
@@ -379,7 +318,6 @@ app.post("/api/delete", (req, res) =>{
   });
 });
 
-    
 app.listen(3000, function () {
     console.log('App is listening on port 3000!');
 });

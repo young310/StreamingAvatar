@@ -1,190 +1,208 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css" />
-    <link rel="icon" href="./favicon.ico" />
 
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
-      @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script> 
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="index.css" />
+  <link rel="icon" href="./favicon.ico" />
 
-  <body>
-    <!-- <button id="changepage">changepage</button> -->
-    <p id="subs"></p>
-    <div id="startup">
-      <header>
-        <p id="webTitle">HR Portal</p>
-        <div id="links">
-          <a class="newInterviewButton">New Interview</a>
-          <a class="candidateListButton">Candidate List</a>
-          <a class="compareCandsButton">Compare Candidates</a>
-        </div>
-      </header>
-      <div id="startBody">
-        <div id="startText">
-          <h1>AI Interviewer</h1>
-          <p>Your personal AI interviewer — no pressure, just progress</p>
-          <button id="newBtn">Get Started<div id="loader"></div></button>
-          <button id="startBtn">Load Wayne</button>
-        </div>
-        <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?q=80&w=2073&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+</head>
+
+<body>
+  <!-- <button id="changepage">changepage</button> -->
+  <p id="subs"></p>
+  <div id="startup">
+    <header>
+      <p id="webTitle">HR Portal</p>
+      <div id="links">
+        <a class="newInterviewButton">New Interview</a>
+        <a class="candidateListButton">Candidate List</a>
+        <a class="compareCandsButton">Compare Candidates</a>
       </div>
+    </header>
+    <div id="startBody">
+      <div id="startText">
+        <h1>AI Interviewer</h1>
+        <p>Your personal AI interviewer — no pressure, just progress</p>
+        <button id="newBtn">Get Started<div id="loader"></div></button>
+        <button id="startBtn">Load Wayne</button>
+      </div>
+      <img
+        src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?q=80&w=2073&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D">
     </div>
-    <div id="main" style="display: none;">
-        <p style="display:none;" id="badcode">beginning</p>
-        <video class="bigVid" id="mediaElement" autoplay></video>
-        
-        <div id="statusBlock">
-            <label style="display: none;">
-                AvatarID
-                <input id="avatarID" type="text" value="Wayne_20240711"/>
-            </label>
-    
-            <label style="display: none;">
-                VoiceID
-                <input id="voiceID" type="text" />
-            </label>
+  </div>
+  <div id="main" style="display: none;">
+    <p style="display:none;" id="badcode">beginning</p>
+    <video class="bigVid" id="mediaElement" autoplay></video>
 
-            <label for="languageDrop">
-              <select name="languageDrop" id="languageDrop">
-                  <option value="Chinese">中文</option>
-                  <option value="English">English</option>
-                  <option value="Japanese">日文</option>
-                  <option value="German">Deutsch</option>
-                  <option value="French">Français</option>
-                  <option value="Spanish">Español</option>
-                  <option value="Italian">Italiano</option>
-              </select>
-            </label>  
-            <input id="taskInput" placeholder="你好，你今天想聊些什麼？" type="text" />
-            <div id="buttonSwitch">
-              <button id="speachBtn"><img width="25%" src="https://cdn-icons-png.flaticon.com/128/709/709682.png"></button>
-              <button id="talkBtn">Send</button>
-              <button id="endSpeech"><img width="25%" src="https://cdn-icons-png.flaticon.com/128/10413/10413984.png"></button>
-            </div>
-            <button style="display: none;" id="repeatBtn">Repeat</button>
-            <button style="display: none;" id="closeBtn">Repeat</button>
-        </div>
+    <div id="statusBlock">
+      <label style="display: none;">
+        AvatarID
+        <input id="avatarID" type="text" value="Wayne_20240711" />
+      </label>
 
-        <p style="color: yellow; background-color: rgb(0,0,0,0.3); padding: 0.5vw;" id="status"></p>
+      <label style="display: none;">
+        VoiceID
+        <input id="voiceID" type="text" />
+      </label>
+
+      <label for="languageDrop">
+        <select name="languageDrop" id="languageDrop">
+          <option value="Chinese">中文</option>
+          <option value="English">English</option>
+          <option value="Japanese">日文</option>
+          <option value="German">Deutsch</option>
+          <option value="French">Français</option>
+          <option value="Spanish">Español</option>
+          <option value="Italian">Italiano</option>
+        </select>
+      </label>
+      <input id="taskInput" placeholder="你好，你今天想聊些什麼？" type="text" />
+      <div id="buttonSwitch">
+        <button id="speachBtn"><img width="25%" src="https://cdn-icons-png.flaticon.com/128/709/709682.png"></button>
+        <button id="talkBtn">Send</button>
+        <button id="endSpeech"><img width="25%"
+            src="https://cdn-icons-png.flaticon.com/128/10413/10413984.png"></button>
+      </div>
+      <button style="display: none;" id="repeatBtn">Repeat</button>
+      <button style="display: none;" id="closeBtn">Repeat</button>
     </div>
 
+    <p style="color: yellow; background-color: rgb(0,0,0,0.3); padding: 0.5vw;" id="status"></p>
+  </div>
 
-    <div id="results" style="display: none;">
-      <header>
-        <p id="webTitle">HR Portal</p>
-        <div id="links">
-          <a class="newInterviewButton">New Interview</a>
-          <a class="candidateListButton">Candidate List</a>
-          <a class="compareCandsButton">Compare Candidates</a>
+
+  <div id="results" style="display: none;">
+    <header>
+      <p id="webTitle">HR Portal</p>
+      <div id="links">
+        <a class="newInterviewButton">New Interview</a>
+        <a class="candidateListButton">Candidate List</a>
+        <a class="compareCandsButton">Compare Candidates</a>
+      </div>
+    </header>
+
+
+
+    <div id="resultsTop">
+      <p id="candidateId" style="display: none;">candidateId</p>
+      <div>
+        <h1 id="candidateName">Jeremy Johnson</h1>
+        <p id="resultsRank"><i>ranked #10 in Frontend Design</i></p>
+      </div>
+      <canvas id="reportDoughnut" style="width: 23%; max-width: 11vw;"></canvas>
+      <button id="deleteCandidate">Delete Candidate</button>
+    </div>
+
+    <div id="reportMain">
+      <div id="sumBox">
+        <h2>Summary</h2>
+        <h3 id="role">Best Fit: Engineering</h3>
+        <canvas id="myRadarChart" style="width: 85%; margin-top: 1vh; margin-bottom: 1vh;"></canvas>
+        <div class="sumBlurb">
+          <h3>Strengths</h3>
+          <p id="strengths">As the sun dipped below the horizon, the children raced along the beach, their laughter
+            echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
         </div>
-      </header>
-
-      
-
-      <div id="resultsTop">
-        <p id="candidateId" style="display: none;">candidateId</p>
-        <div>
-          <h1 id="candidateName">Jeremy Johnson</h1>
-          <p id="resultsRank"><i>ranked #10 in Frontend Design</i></p>
+        <div class="sumBlurb">
+          <h3>Weaknesses</h3>
+          <p id="weaknesses">As the sun dipped below the horizon, the children raced along the beach, their laughter
+            echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
         </div>
-        <canvas id="reportDoughnut" style="width: 23%; max-width: 11vw;"></canvas>
-        <button id="deleteCandidate">Delete Candidate</button>
+        <div class="sumBlurb">
+          <h3>Fit</h3>
+          <p id="fit">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing,
+            while the waves gently kissed the shore, creating a peaceful rhythm.</p>
+        </div>
       </div>
 
-      <div id="reportMain">
-          <div id="sumBox">
-              <h2>Summary</h2>
-              <h3 id="role">Best Fit: Engineering</h3>
-              <canvas id="myRadarChart" style="width: 85%; margin-top: 1vh; margin-bottom: 1vh;"></canvas>
-              <div class="sumBlurb">
-                  <h3>Strengths</h3>
-                  <p id="strengths">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
-              </div>
-              <div class="sumBlurb">
-                  <h3>Weaknesses</h3>
-                  <p id="weaknesses">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
-              </div>
-              <div class="sumBlurb">
-                  <h3>Fit</h3>
-                  <p id="fit">As the sun dipped below the horizon, the children raced along the beach, their laughter echoing, while the waves gently kissed the shore, creating a peaceful rhythm.</p>
-              </div>
-          </div>
-      
-          <div id="paramBoxes">
-              <div class="param">
-                <h2 id="eduhead">Educational Background</h2>
-                <p id="education">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                <h2 id="workhead">Work/Project Experience</h2>
-                <p  id="work">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                  <h2 id="techhead">Technical Ability</h2>
-                  <p  id="technical">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                  <h2 id="softhead">Soft Skills</h2>
-                  <p id="soft">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                  <h2 id="behhead">Interview Behavior</h2>
-                  <p id="behavior">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div class="param">
-                <h2 id="sumhead">Interview Summary</h2>
-                <p id="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>   
-          </div>
+      <div id="paramBoxes">
+        <div class="param">
+          <h2 id="eduhead">Educational Background</h2>
+          <p id="education">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.</p>
         </div>
-    </div>
-
-    <div id="list" style="display: none;">
-      <header>
-        <p id="webTitle">HR Portal</p>
-        <div id="links">
-          <a class="newInterviewButton">New Interview</a>
-          <a class="candidateListButton">Candidate List</a>
-          <a class="compareCandsButton">Compare Candidates</a>
+        <div class="param">
+          <h2 id="workhead">Work/Project Experience</h2>
+          <p id="work">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.</p>
         </div>
-      </header>
-      <h1>Candidate List</h1>
-      <div id="candidateTable">
-        <div id="tableHeader">
-          <div class="tableFront">
-            <p>Name</p>
-            <p>Applying For</p>
-            <p>Next Stage</p>
-          </div>
-          <div class="tableBack">
-            <p>Date</p>
-            <p>Score</p>
-          </div>
+        <div class="param">
+          <h2 id="techhead">Technical Ability</h2>
+          <p id="technical">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="param">
+          <h2 id="softhead">Soft Skills</h2>
+          <p id="soft">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="param">
+          <h2 id="behhead">Interview Behavior</h2>
+          <p id="behavior">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="param">
+          <h2 id="sumhead">Interview Summary</h2>
+          <p id="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.</p>
         </div>
       </div>
     </div>
+  </div>
 
-    <div id="comparison" style="display: none;">
-      <header>
-        <p id="webTitle">HR Portal</p>
-        <div id="links">
-          <a class="newInterviewButton">New Interview</a>
-          <a class="candidateListButton">Candidate List</a>
-          <a class="compareCandsButton">Compare Candidates</a>
+  <div id="list" style="display: none;">
+    <header>
+      <p id="webTitle">HR Portal</p>
+      <div id="links">
+        <a class="newInterviewButton">New Interview</a>
+        <a class="candidateListButton">Candidate List</a>
+        <a class="compareCandsButton">Compare Candidates</a>
+      </div>
+    </header>
+    <h1>Candidate List</h1>
+    <div id="candidateTable">
+      <div id="tableHeader">
+        <div class="tableFront">
+          <p>Name</p>
+          <p>Applying For</p>
+          <p>Next Stage</p>
         </div>
-      </header>
-      <h1>Compare Candidates</h1>
-      <button id="resetCandidates">Reset Candidates</button>
-      <div id="compareContainer">
-        <div class="compareBox barDisplay" id="compareLeft">
-          <button class="selectCandidate">Select Candidate</button>
-          <!-- <p class="returnToList">&#129136</p>
+        <div class="tableBack">
+          <p>Date</p>
+          <p>Score</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="comparison" style="display: none;">
+    <header>
+      <p id="webTitle">HR Portal</p>
+      <div id="links">
+        <a class="newInterviewButton">New Interview</a>
+        <a class="candidateListButton">Candidate List</a>
+        <a class="compareCandsButton">Compare Candidates</a>
+      </div>
+    </header>
+    <h1>Compare Candidates</h1>
+    <button id="resetCandidates">Reset Candidates</button>
+    <div id="compareContainer">
+      <div class="compareBox barDisplay" id="compareLeft">
+        <button class="selectCandidate">Select Candidate</button>
+        <!-- <p class="returnToList">&#129136</p>
           <h2>Jeremy Johnson</h2>
           <p class="rankBlurb">ranked #10 applying for frontend designer</p>
           <canvas id="compareGraph1" style="width: 50%"></canvas>
@@ -193,11 +211,11 @@
             <div class="scoreTitles"><p>Technical Ability</p><p>Work Experience</p><p>Education</p><p>Soft Skills</p><p>Interview Behavior</p></div>
             <div class="scoreBars"><div class="techBar"></div><div class="workBar"></div><div class="eduBar"></div><div class="softBar"></div><div class="beBar"></div></div>
           </div> -->
-        </div>
-        <p id="VS">VS</p>
-        <div class="compareBox barDisplay" id="compareRight">
-          <button class="selectCandidate">Select Candidate</button>
-          <!-- <div class="compareList">
+      </div>
+      <p id="VS">VS</p>
+      <div class="compareBox barDisplay" id="compareRight">
+        <button class="selectCandidate">Select Candidate</button>
+        <!-- <div class="compareList">
             <h3>Select Candidate</h3>
             <div class="compareSelection">
               <div>
@@ -222,14 +240,47 @@
             <p>Currently studying philosophy, indicating analytical skills, but lacking direct industry relevance.</p>
             <h3>Interview Behavior</h3>
             <p>Communicated thoughtfully and confidently throughout the interview.</p> -->
-          </div>
-
-
-        </div>
       </div>
-    </div>
 
-    <script type="module" src="index.js"></script>
-    <script type="module" src="buttons.js"></script>
-  </body>
+
+    </div>
+  </div>
+  </div>
+
+  <script type="module" src="index.js"></script>
+  <script type="module" src="buttons.js"></script>
+  <script>
+    // 空白鍵控制語音對話功能
+    let spaceKeyPressed = false;
+
+    document.addEventListener('keydown', function (event) {
+      // 檢查是否按下空白鍵 (keyCode 32 或 event.code === 'Space')
+      if (event.code === 'Space' && !spaceKeyPressed) {
+        event.preventDefault(); // 防止頁面滾動
+        spaceKeyPressed = true;
+
+        // 觸發開始語音按鈕的點擊事件
+        const speachBtn = document.getElementById('speachBtn');
+        if (speachBtn) {
+          speachBtn.click();
+        }
+      }
+    });
+
+    document.addEventListener('keyup', function (event) {
+      // 檢查是否放開空白鍵
+      if (event.code === 'Space' && spaceKeyPressed) {
+        event.preventDefault();
+        spaceKeyPressed = false;
+
+        // 觸發結束語音按鈕的點擊事件
+        const endBtn = document.getElementById('endSpeech');
+        if (endBtn) {
+          endBtn.click();
+        }
+      }
+    });
+  </script>
+</body>
+
 </html>

@@ -7,7 +7,7 @@ const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognit
 //determines recognition language based on dropdown selection
 var selector = document.getElementById("languageDrop");
 var selectedLang = selector.value;
-recognition.lang = "en-US";
+recognition.lang = "zh-TW";
 recognition.continuous = true;
 var transStore = [];
 

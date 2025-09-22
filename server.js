@@ -21,7 +21,7 @@ const openai = new OpenAI({
   defaultHeaders: { 'OpenAI-Beta': 'assistants=v2' }
 });
 
-const assistantId = 'asst_PZKZ4PBkWQVIoNSPoFJ5QtC5';
+const assistantId = 'asst_inOoj1HGJrQ0Bp0GH3DsKBek';
 
 app.use(express.static(path.join(__dirname, '.')));
 
@@ -43,18 +43,18 @@ app.all('/heygen/*', async (req, res) => {
     };
 
     const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
-    
+
     // Add timeout and better error handling
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
+
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
       body: hasBody ? JSON.stringify(req.body ?? {}) : undefined,
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeoutId);
 
     // Pass through status and content-type
@@ -65,7 +65,7 @@ app.all('/heygen/*', async (req, res) => {
     res.send(text);
   } catch (err) {
     console.error('Error proxying HeyGen request:', err);
-    
+
     if (err.name === 'AbortError') {
       res.status(408).json({ error: 'Request timeout to HeyGen API' });
     } else if (err.code === 'UND_ERR_CONNECT_TIMEOUT') {
@@ -90,6 +90,11 @@ app.post('/openai/complete', async (req, res) => {
       console.log("Using existing thread ID:", globalThreadId);
     }
 
+    // 確保 globalThreadId 存在
+    if (!globalThreadId) {
+      throw new Error("Failed to get or create thread ID");
+    }
+
     const myThreadMessage = await openai.beta.threads.messages.create(globalThreadId, {
       role: "user",
       content: req.body.prompt,
@@ -100,25 +105,41 @@ app.post('/openai/complete', async (req, res) => {
     });
 
     console.log("Run created:", myRun.id, "Status:", myRun.status);
+    console.log("Thread ID:", globalThreadId, "Run ID:", myRun.id);
+
+    // 驗證必要的參數
+    if (!myRun || !myRun.id) {
+      throw new Error("Failed to create run - no run ID returned");
+    }
 
     // 輪詢直到完成或超時
     let attempts = 0;
     let run;
     while (attempts < 60) {
-      run = await openai.beta.threads.runs.retrieve(globalThreadId, myRun.id);
-      console.log(`Run status: ${run.status} (attempt ${attempts + 1})`);
+      if (!globalThreadId || !myRun.id) {
+        throw new Error(`Missing required parameters: threadId=${globalThreadId}, runId=${myRun.id}`);
+      }
+
+      try {
+        run = await openai.beta.threads.runs.retrieve(globalThreadId, myRun.id);
+      } catch (retrieveError) {
+        console.error("Error retrieving run:", retrieveError);
+        throw retrieveError;
+      }
       
+      console.log(`Run status: ${run.status} (attempt ${attempts + 1})`);
+
       if (run.status === "completed") break;
       if (run.status === "failed") {
         console.error("Run failed:", run.last_error);
         throw new Error("Assistant run failed");
       }
       if (run.status === "cancelled") throw new Error("Assistant run cancelled");
-      
+
       attempts++;
       await new Promise(r => setTimeout(r, 1000));
     }
-    
+
     if (attempts >= 60) throw new Error("Assistant run timed out");
 
     // 取得最新訊息
@@ -159,7 +180,7 @@ const sqlite = require('sqlite3'); //adds sqlite functionality to code. Requires
 const db = new sqlite.Database('./data.sqlite');
 
 //creates all the tables in the database
-db.serialize(()=>{
+db.serialize(() => {
   //creates table that stores individual candidate information
   db.run(`CREATE TABLE IF NOT EXISTS candidates (
     candidate_id CHAR(255) PRIMARY KEY, 
@@ -205,40 +226,40 @@ app.post("/api/candidates", (req, res) => {
 
     let candidate_id = "C" + (new Date().getTime() + Math.floor(Math.random())).toString();
 
-    db.run(`INSERT INTO candidates VALUES (?, ?, ?, ?, ?)`, [candidate_id, candidateName, applyingFor, applicationDate, candidateScore], function(err){
+    db.run(`INSERT INTO candidates VALUES (?, ?, ?, ?, ?)`, [candidate_id, candidateName, applyingFor, applicationDate, candidateScore], function (err) {
       if (err) return res.status(500).json({ error: 'Failed to create candidate', details: err });
       res.status(201).json({ candidate_id });
     });
 
     return candidate_id;
-    
+
   });
 
 });
 
 //saves report (text) of the candidate skills into the database
-app.post("/api/reports", (req, res) =>{
+app.post("/api/reports", (req, res) => {
   const { candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit } = req.body;
   db.serialize(() => {
 
     let report_id = "R" + (new Date().getTime() + Math.floor(Math.random())).toString();
 
-    db.run(`INSERT INTO reports VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit], function(err){
+    db.run(`INSERT INTO reports VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit], function (err) {
       if (err) return res.status(500).json({ error: 'Failed to create report', details: err });
       res.status(201).json({ report_id });
     });
-  
+
   });
 });
 
 //saves report (scores) of the candidate skills into the database
-app.post("/api/scores", (req, res) =>{
+app.post("/api/scores", (req, res) => {
   const { candidate_id, tech_score, work_score, soft_score, edu_score, behav_score } = req.body;
-  db.serialize(()=>{
+  db.serialize(() => {
 
     let report_id = "S" + (new Date().getTime() + Math.floor(Math.random())).toString();
-    
-    db.run(`INSERT into score_reports VALUES (?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, tech_score, work_score, soft_score, edu_score, behav_score], function(err){
+
+    db.run(`INSERT into score_reports VALUES (?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, tech_score, work_score, soft_score, edu_score, behav_score], function (err) {
       if (err) return res.status(500).json({ error: 'Failed to create score report', details: err });
       res.status(201).json({ report_id });
     });
@@ -276,7 +297,7 @@ app.get("/api/candidates/:id", (req, res) => {
 //look for report from specific candidate
 app.get("/api/reports", (req, res) => {
   const { candidate_id } = req.query;
-  db.serialize(()=>{
+  db.serialize(() => {
     db.all(`SELECT * FROM reports WHERE candidate_id=?`, [candidate_id], (err, rows) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching data: ' + err.message });
@@ -290,7 +311,7 @@ app.get("/api/reports", (req, res) => {
 //look for scores from the reports
 app.get("/api/scores", (req, res) => {
   const { candidate_id } = req.query;
-  db.serialize(()=>{
+  db.serialize(() => {
     db.all(`SELECT * FROM score_reports WHERE candidate_id=?`, [candidate_id], (err, rows) => {
       if (err) {
         return res.status(500).json({ error: 'Error fetching data: ' + err.message });
@@ -302,8 +323,8 @@ app.get("/api/scores", (req, res) => {
 });
 
 //deletes a candidate from the database
-app.post("/api/delete", (req, res) =>{
-  const {candidate_id} = req.body;
+app.post("/api/delete", (req, res) => {
+  const { candidate_id } = req.body;
   db.serialize(() => {
     db.run(`DELETE FROM candidates WHERE candidate_id = ?`, [candidate_id], function (err) {
       if (err) return res.status(500).json({ error: 'Failed to delete candidate', details: err });
@@ -319,5 +340,5 @@ app.post("/api/delete", (req, res) =>{
 });
 
 app.listen(3000, function () {
-    console.log('App is listening on port 3000!');
+  console.log('App is listening on port 3000!');
 });

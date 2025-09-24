@@ -18,11 +18,13 @@ Either an an API Key or Trial Token from HeyGen is required to run this Streamin
 
 ### Which Avatars can I use with this project?
 
-By default, there are several Public Avatars that can be used in Streaming. (AKA Streaming Avatars.) You can find the Avatar IDs for these Public Avatars by navigating to app.heygen.com/streaming-avatar and clicking 'Select Avatar'.
+Important: HeyGen has deprecated Avatar Versions v1 and v2 for Interactive/Streaming sessions. You must use v3 (or higher) Interactive Avatar IDs.
 
-In order to use a private Avatar created under your own account in Streaming, it must be upgraded to be a Streaming Avatar. Only 1. Finetune Instant Avatars and 2. Studio Avatars are able to be upgraded to Streaming Avatars. This upgrade is a one-time fee and can be purchased by navigating to app.heygen.com/streaming-avatar and clicking 'Select Avatar'.
+- Public Interactive Avatars: Find IDs at `labs.heygen.com/interactive-avatar` by clicking "Select Avatar".
+- Your own Avatars: Create Interactive Avatars at `labs.heygen.com/interactive-avatar` or upgrade supported avatars to Interactive.
+- Deprecation notice: https://docs.heygen.com/docs/interactive-avatar-api-avatar-version-deprecation-notice
 
-Photo Avatars are not compatible with Streaming and cannot be used.
+Note: Photo Avatars are not compatible with Interactive/Streaming and cannot be used.
 
 ### Which voices can I use?
 
@@ -65,8 +67,8 @@ You can check how many active sessions you have open with the List Sessions endp
 
 ## Using the Demo
 
-1. Open the web browser and enter the `http://localhost:3000`to start the demo.
-2. Click the "New" button to create a new session. The status updates will be displayed on the screen.
+1. Open the web browser and enter the `http://localhost:3000` to start the demo.
+2. Paste a v3 Interactive Avatar ID into the Avatar input field, then click the "New" button to create a new session. The status updates will be displayed on the screen.
 3. After the session is created successfully, click the "Start" button to start streaming the avatar.
 4. To send a task to the avatar, type the text in the provided input field and click the "Repeat Text" button.
 5. In order to use Talk mode, set your **OpenAI** key in **server.js** before starting the server and click "Talk" button

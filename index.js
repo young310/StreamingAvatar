@@ -1,17 +1,14 @@
 'use strict';
 
 const heygen_API = {
-  apiKey: 'ZTgyMzdiZDM5YzBhNGI0YThiYjY2YTUzMGY0OGU3YzUtMTczNDYwMDQ2Mg==',
-  serverUrl: 'https://api.heygen.com',
+  // Calls go through local proxy server to avoid CORS and keep key server-side
+  serverUrl: '/heygen',
 };
 
 const statusElement = document.querySelector('#status');
-const apiKey = heygen_API.apiKey;
 const SERVER_URL = heygen_API.serverUrl;
 
-if (apiKey === 'YourApiKey' || SERVER_URL === '') {
-  alert('Please enter your API key and server URL in the api.json file');
-}
+// Make sure server.js is running with HEYGEN_API_KEY in env for proxying
 
 let sessionInfo = null;
 let peerConnection = null;
@@ -32,13 +29,21 @@ function onMessage(event) {
 // Create a new WebRTC session when clicking the "New" button
 async function createNewSession() {
   updateStatus(statusElement, 'Creating new session... please wait');
+  // Ensure user sees status updates
+  document.getElementById('main').style.display = 'initial';
+  document.getElementById('startup').style.display = 'none';
 
   const avatar = avatarID.value;
+  if (!avatar || avatar.trim() === '') {
+    updateStatus(statusElement, 'Please enter a v3 Interactive Avatar ID');
+    return;
+  }
   const voice = voiceID.value;
 
   // call the new interface to get the server's offer SDP and ICE server to create a new RTCPeerConnection
   sessionInfo = await newSession('high', avatar, voice);
-  const { sdp: serverSdp, ice_servers2: iceServers } = sessionInfo;
+  const serverSdp = sessionInfo?.sdp;
+  const iceServers = sessionInfo?.ice_servers2 || sessionInfo?.ice_servers || [];
 
   // Create a new RTCPeerConnection
   peerConnection = new RTCPeerConnection({ iceServers: iceServers });
@@ -58,6 +63,10 @@ async function createNewSession() {
   };
 
   // Set server's SDP as remote description
+  if (!serverSdp) {
+    updateStatus(statusElement, 'Failed to get server SDP. Check API key and avatar ID.');
+    return;
+  }
   const remoteDescription = new RTCSessionDescription(serverSdp);
   await peerConnection.setRemoteDescription(remoteDescription);
 
@@ -71,8 +80,12 @@ async function createNewSession() {
 async function startAndDisplaySession() {
 
   if (!sessionInfo) {
-    updateStatus(statusElement, 'Please create a connection first');
-    return;
+    // Try to auto-create if user clicked Start first
+    await createNewSession();
+    if (!sessionInfo) {
+      updateStatus(statusElement, 'Please create a connection first');
+      return;
+    }
   }
 
   updateStatus(statusElement, 'Starting session... please wait');
@@ -206,7 +219,6 @@ async function newSession(quality, avatar_name, voice_id) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({
       quality,
@@ -216,19 +228,15 @@ async function newSession(quality, avatar_name, voice_id) {
       },
     }),
   });
-  if (response.status === 500) {
-    console.error('Server error');
-    updateStatus(
-      statusElement,
-      'Server Error. Please ask the staff if the service has been turned on',
-    );
-
-    throw new Error('Server error');
-  } else {
-    const data = await response.json();
-    console.log(data.data);
-    return data.data;
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    console.error('streaming.new failed:', response.status, errText);
+    updateStatus(statusElement, `streaming.new failed (${response.status}). Check HEYGEN_API_KEY and avatar ID.`);
+    throw new Error('streaming.new failed');
   }
+  const data = await response.json();
+  console.log(data.data);
+  return data.data;
 }
 
 // start the session
@@ -237,21 +245,17 @@ async function startSession(session_id, sdp) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id, sdp }),
   });
-  if (response.status === 500) {
-    console.error('Server error');
-    updateStatus(
-      statusElement,
-      'Server Error. Please ask the staff if the service has been turned on',
-    );
-    throw new Error('Server error');
-  } else {
-    const data = await response.json();
-    return data.data;
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    console.error('streaming.start failed:', response.status, errText);
+    updateStatus(statusElement, `streaming.start failed (${response.status}).`);
+    throw new Error('streaming.start failed');
   }
+  const data = await response.json();
+  return data.data;
 }
 
 // submit the ICE candidate
@@ -260,21 +264,16 @@ async function handleICE(session_id, candidate) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id, candidate }),
   });
-  if (response.status === 500) {
-    console.error('Server error');
-    updateStatus(
-      statusElement,
-      'Server Error. Please ask the staff if the service has been turned on',
-    );
-    throw new Error('Server error');
-  } else {
-    const data = await response.json();
-    return data;
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    console.error('streaming.ice failed:', response.status, errText);
+    return { error: true };
   }
+  const data = await response.json();
+  return data;
 }
 
 async function talkToOpenAI(prompt) {
@@ -304,21 +303,17 @@ async function repeat(session_id, text) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id, text }),
   });
-  if (response.status === 500) {
-    console.error('Server error');
-    updateStatus(
-      statusElement,
-      'Server Error. Please ask the staff if the service has been turned on',
-    );
-    throw new Error('Server error');
-  } else {
-    const data = await response.json();
-    return data.data;
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    console.error('streaming.task failed:', response.status, errText);
+    updateStatus(statusElement, `streaming.task failed (${response.status}).`);
+    throw new Error('streaming.task failed');
   }
+  const data = await response.json();
+  return data.data;
 }
 
 // stop session
@@ -327,18 +322,17 @@ async function stopSession(session_id) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
     },
     body: JSON.stringify({ session_id }),
   });
-  if (response.status === 500) {
-    console.error('Server error');
-    updateStatus(statusElement, 'Server Error. Please ask the staff for help');
-    throw new Error('Server error');
-  } else {
-    const data = await response.json();
-    return data.data;
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    console.error('streaming.stop failed:', response.status, errText);
+    updateStatus(statusElement, `streaming.stop failed (${response.status}).`);
+    throw new Error('streaming.stop failed');
   }
+  const data = await response.json();
+  return data.data;
 }
 
 let renderID = 0;

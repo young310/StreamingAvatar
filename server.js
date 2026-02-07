@@ -156,167 +156,141 @@ app.post('/openai/reset', async (req, res) => {
 //does the database things
 
 //code about connecting to the database
-const sqlite = require('sqlite3'); //adds sqlite functionality to code. Requires installation (npm install sqlite3)
-const db = new sqlite.Database('./data.sqlite');
+const Database = require('better-sqlite3'); //adds sqlite functionality to code. Requires installation (npm install better-sqlite3)
+const db = new Database('./data.sqlite');
 
 //creates all the tables in the database
-db.serialize(()=>{
-  //creates table that stores individual candidate information
-  db.run(`CREATE TABLE IF NOT EXISTS candidates (
-    candidate_id CHAR(255) PRIMARY KEY, 
-    candidate_name TEXT,
-    applying_for TEXT,
-    application_date DATETIME,
-    candidate_score INTEGER
-    )`);
 
-  //creates table that stores each candidate's report information
-  db.run(`CREATE TABLE IF NOT EXISTS reports (
-    report_id CHAR(255) PRIMARY KEY,
-    candidate_id CHAR(255),
-    technical_skills TEXT,
-    work_experience TEXT,
-    soft_skills TEXT,
-    education TEXT,
-    behavior TEXT,
-    summary TEXT,
-    strengths TEXT,
-    weaknesses TEXT,
-    fit TEXT,
-    FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
-    )`);
+//creates table that stores individual candidate information
+db.exec(`CREATE TABLE IF NOT EXISTS candidates (
+  candidate_id CHAR(255) PRIMARY KEY,
+  candidate_name TEXT,
+  applying_for TEXT,
+  application_date DATETIME,
+  candidate_score INTEGER
+  )`);
 
-  //creates table that stores the individual scores of each individual report section
-  db.run(`CREATE TABLE IF NOT EXISTS score_reports (
-    report_id CHAR(255) PRIMARY KEY,
-    candidate_id CHAR(255),
-    tech_score INTEGER,
-    work_score INTEGER,
-    soft_score INTEGER,
-    edu_score INTEGER,
-    behav_score INTEGER,
-    FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
-    )`);
-});
+//creates table that stores each candidate's report information
+db.exec(`CREATE TABLE IF NOT EXISTS reports (
+  report_id CHAR(255) PRIMARY KEY,
+  candidate_id CHAR(255),
+  technical_skills TEXT,
+  work_experience TEXT,
+  soft_skills TEXT,
+  education TEXT,
+  behavior TEXT,
+  summary TEXT,
+  strengths TEXT,
+  weaknesses TEXT,
+  fit TEXT,
+  FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
+  )`);
+
+//creates table that stores the individual scores of each individual report section
+db.exec(`CREATE TABLE IF NOT EXISTS score_reports (
+  report_id CHAR(255) PRIMARY KEY,
+  candidate_id CHAR(255),
+  tech_score INTEGER,
+  work_score INTEGER,
+  soft_score INTEGER,
+  edu_score INTEGER,
+  behav_score INTEGER,
+  FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
+  )`);
 
 //saves candidate data into sqlite database and returns a unique candidate id
 app.post("/api/candidates", (req, res) => {
   const { candidateName, applyingFor, applicationDate, candidateScore } = req.body;
-  db.serialize(() => {
-
-    let candidate_id = "C" + (new Date().getTime() + Math.floor(Math.random())).toString();
-
-    db.run(`INSERT INTO candidates VALUES (?, ?, ?, ?, ?)`, [candidate_id, candidateName, applyingFor, applicationDate, candidateScore], function(err){
-      if (err) return res.status(500).json({ error: 'Failed to create candidate', details: err });
-      res.status(201).json({ candidate_id });
-    });
-
-    return candidate_id;
-    
-  });
-
+  try {
+    const candidate_id = "C" + (new Date().getTime() + Math.floor(Math.random())).toString();
+    db.prepare(`INSERT INTO candidates VALUES (?, ?, ?, ?, ?)`).run(candidate_id, candidateName, applyingFor, applicationDate, candidateScore);
+    res.status(201).json({ candidate_id });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create candidate', details: err.message });
+  }
 });
 
 //saves report (text) of the candidate skills into the database
-app.post("/api/reports", (req, res) =>{
+app.post("/api/reports", (req, res) => {
   const { candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit } = req.body;
-  db.serialize(() => {
-
-    let report_id = "R" + (new Date().getTime() + Math.floor(Math.random())).toString();
-
-    db.run(`INSERT INTO reports VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit], function(err){
-      if (err) return res.status(500).json({ error: 'Failed to create report', details: err });
-      res.status(201).json({ report_id });
-    });
-  
-  });
+  try {
+    const report_id = "R" + (new Date().getTime() + Math.floor(Math.random())).toString();
+    db.prepare(`INSERT INTO reports VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(report_id, candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit);
+    res.status(201).json({ report_id });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create report', details: err.message });
+  }
 });
 
 //saves report (scores) of the candidate skills into the database
-app.post("/api/scores", (req, res) =>{
+app.post("/api/scores", (req, res) => {
   const { candidate_id, tech_score, work_score, soft_score, edu_score, behav_score } = req.body;
-  db.serialize(()=>{
-
-    let report_id = "S" + (new Date().getTime() + Math.floor(Math.random())).toString();
-    
-    db.run(`INSERT into score_reports VALUES (?, ?, ?, ?, ?, ?, ?)`, [report_id, candidate_id, tech_score, work_score, soft_score, edu_score, behav_score], function(err){
-      if (err) return res.status(500).json({ error: 'Failed to create score report', details: err });
-      res.status(201).json({ report_id });
-    });
-
-  });
+  try {
+    const report_id = "S" + (new Date().getTime() + Math.floor(Math.random())).toString();
+    db.prepare(`INSERT INTO score_reports VALUES (?, ?, ?, ?, ?, ?, ?)`).run(report_id, candidate_id, tech_score, work_score, soft_score, edu_score, behav_score);
+    res.status(201).json({ report_id });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create score report', details: err.message });
+  }
 });
 
 //look for all candidates
 app.get("/api/candidates", (req, res) => {
-  db.serialize(() => {
-    db.all('SELECT * FROM candidates', [], (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
-      } else {
-        res.json(rows); // Directly send the rows as JSON response
-      }
-    });
-  })
+  try {
+    const rows = db.prepare('SELECT * FROM candidates').all();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching data: ' + err.message });
+  }
 });
 
 //look for pre-existing candidates in database
 app.get("/api/candidates/:id", (req, res) => {
   const candidate_id = req.params.id;
-  db.serialize(() => {
-    db.all('SELECT * FROM candidates WHERE candidate_id = ?', [candidate_id], (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
-      } else {
-        res.json(rows); // Directly send the rows as JSON response
-      }
-    });
-  })
+  try {
+    const rows = db.prepare('SELECT * FROM candidates WHERE candidate_id = ?').all(candidate_id);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching data: ' + err.message });
+  }
 });
 
 //look for report from specific candidate
 app.get("/api/reports", (req, res) => {
   const { candidate_id } = req.query;
-  db.serialize(()=>{
-    db.all(`SELECT * FROM reports WHERE candidate_id=?`, [candidate_id], (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
-      } else {
-        res.json(rows); // Directly send the rows as JSON response
-      }
-    });
-  })
+  try {
+    const rows = db.prepare('SELECT * FROM reports WHERE candidate_id = ?').all(candidate_id);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching data: ' + err.message });
+  }
 });
 
 //look for scores from the reports
 app.get("/api/scores", (req, res) => {
   const { candidate_id } = req.query;
-  db.serialize(()=>{
-    db.all(`SELECT * FROM score_reports WHERE candidate_id=?`, [candidate_id], (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error fetching data: ' + err.message });
-      } else {
-        res.json(rows); // Directly send the rows as JSON response
-      }
-    });
-  })
+  try {
+    const rows = db.prepare('SELECT * FROM score_reports WHERE candidate_id = ?').all(candidate_id);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching data: ' + err.message });
+  }
 });
 
 //deletes a candidate from the database
-app.post("/api/delete", (req, res) =>{
-  const {candidate_id} = req.body;
-  db.serialize(() => {
-    db.run(`DELETE FROM candidates WHERE candidate_id = ?`, [candidate_id], function (err) {
-      if (err) return res.status(500).json({ error: 'Failed to delete candidate', details: err });
-      db.run(`DELETE FROM reports WHERE candidate_id = ?`, [candidate_id], function (err) {
-        if (err) return res.status(500).json({ error: 'Failed to delete reports', details: err });
-        db.run(`DELETE FROM score_reports WHERE candidate_id = ?`, [candidate_id], function (err) {
-          if (err) return res.status(500).json({ error: 'Failed to delete score reports', details: err });
-          res.status(201).json({ message: "Candidate deleted", candidate_id });
-        });
-      });
+app.post("/api/delete", (req, res) => {
+  const { candidate_id } = req.body;
+  try {
+    const deleteAll = db.transaction((id) => {
+      db.prepare('DELETE FROM score_reports WHERE candidate_id = ?').run(id);
+      db.prepare('DELETE FROM reports WHERE candidate_id = ?').run(id);
+      db.prepare('DELETE FROM candidates WHERE candidate_id = ?').run(id);
     });
-  });
+    deleteAll(candidate_id);
+    res.status(201).json({ message: "Candidate deleted", candidate_id });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete candidate', details: err.message });
+  }
 });
 
 app.listen(3000, function () {

@@ -1,14 +1,54 @@
 require('dotenv').config();
 const express = require('express');
 const OpenAI = require('openai');
+const multer = require('multer');
 const path = require('path');
 const app = express();
 app.use(express.json());
 
+const upload = multer({ storage: multer.memoryStorage() });
+
 const openaiApiKey = process.env.OPENAI_API_KEY;
-if (!openaiApiKey) {
-  console.error('Error: OPENAI_API_KEY environment variable is not set.');
+const azureOpenaiKey = process.env.AZURE_OPENAI_KEY;
+const azureOpenaiEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
+const azureOpenaiApiVersion = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview';
+const llmModel = process.env.LLM_MODEL || 'gpt-4.1-mini';
+
+// Determine which OpenAI client to use (Azure or standard)
+let openai;
+let useAzure = false;
+
+if (azureOpenaiKey && azureOpenaiEndpoint) {
+  openai = new OpenAI({
+    apiKey: azureOpenaiKey,
+    baseURL: `${azureOpenaiEndpoint.replace(/\/$/, '')}/openai/deployments/${llmModel}`,
+    defaultQuery: { 'api-version': azureOpenaiApiVersion },
+    defaultHeaders: { 'api-key': azureOpenaiKey },
+  });
+  useAzure = true;
+  console.log(`Using Azure OpenAI: ${azureOpenaiEndpoint} with model ${llmModel}`);
+} else if (openaiApiKey) {
+  openai = new OpenAI({ apiKey: openaiApiKey });
+  console.log(`Using OpenAI API with model ${llmModel}`);
+} else {
+  console.error('Error: No OpenAI API key configured. Set OPENAI_API_KEY or AZURE_OPENAI_KEY + AZURE_OPENAI_ENDPOINT.');
   process.exit(1);
+}
+
+// Whisper client (Azure deployment or standard OpenAI fallback)
+const whisperModel = process.env.WHISPER_MODEL || 'whisper-1';
+let whisperClient;
+if (azureOpenaiKey && azureOpenaiEndpoint) {
+  whisperClient = new OpenAI({
+    apiKey: azureOpenaiKey,
+    baseURL: `${azureOpenaiEndpoint.replace(/\/$/, '')}/openai/deployments/${whisperModel}`,
+    defaultQuery: { 'api-version': azureOpenaiApiVersion },
+    defaultHeaders: { 'api-key': azureOpenaiKey },
+  });
+  console.log(`Using Azure Whisper: deployment=${whisperModel}`);
+} else if (openaiApiKey) {
+  whisperClient = new OpenAI({ apiKey: openaiApiKey });
+  console.log('Using standard OpenAI for Whisper');
 }
 
 // Read HeyGen API key for server-side proxying
@@ -16,13 +56,6 @@ const heygenApiKey = process.env.HEYGEN_API_KEY;
 if (!heygenApiKey) {
   console.warn('Warning: HEYGEN_API_KEY environment variable is not set. HeyGen API calls will fail unless a key is provided.');
 }
-
-const openai = new OpenAI({
-  apiKey: openaiApiKey,
-  defaultHeaders: { 'OpenAI-Beta': 'assistants=v2' }
-});
-
-const assistantId = 'asst_inOoj1HGJrQ0Bp0GH3DsKBek';
 
 app.use(express.static(path.join(__dirname, '.')));
 
@@ -77,241 +110,113 @@ app.all('/heygen/*', async (req, res) => {
   }
 });
 
-// 全局變數來儲存 thread ID，確保整個對話使用同一個 thread
-let globalThreadId = null;
+// System prompt: Alex, Elvis's colleague
+const SYSTEM_PROMPT = `You are Alex, a long-time colleague and close friend of Elvis Chuang. You have worked alongside Elvis for years and know him very well, both professionally and personally. You speak naturally, professionally yet warmly, like a trusted colleague would when introducing someone they genuinely respect and admire.
+
+You support both Chinese (Traditional) and English conversations. Respond in the same language the user uses.
+
+IMPORTANT: Keep your responses concise and conversational - aim for 2-3 sentences per response. This is a spoken conversation through an avatar, so long paragraphs don't work well. Be natural and brief, like a real conversation.
+
+Here is what you know about Elvis:
+
+## Professional Background
+- Elvis Chuang is an AI & Data leader with deep expertise in enterprise AI transformation
+- He has extensive experience at Deloitte, one of the Big Four consulting firms, where he led AI and data analytics initiatives
+- He specializes in bridging the gap between cutting-edge AI technology and real business value
+
+## Technical Expertise
+- Strong background in AI/ML, including LLM applications, computer vision, and NLP
+- Experienced with cloud platforms (Azure, AWS, GCP) and enterprise data architectures
+- Skilled in Python, SQL, and modern AI frameworks
+- Deep understanding of data engineering, ETL pipelines, and data governance
+
+## Leadership & Management Style
+- Elvis is known for his ability to communicate complex technical concepts to non-technical stakeholders
+- He fosters a collaborative team culture and mentors junior team members
+- He takes a pragmatic, results-oriented approach to project delivery
+- He balances innovation with practical business needs
+
+## Key Projects & Achievements
+- Led multiple enterprise AI transformation projects for major clients
+- Implemented AI-powered document processing and analysis solutions
+- Built and managed cross-functional data science teams
+- Delivered measurable business impact through data-driven solutions
+
+## Personal Qualities
+- Elvis is thoughtful, detail-oriented, and always eager to learn new things
+- He has a great sense of humor and makes the workplace enjoyable
+- He is reliable, trustworthy, and someone you can always count on
+- He values work-life balance and encourages his team to do the same
+
+When answering questions:
+- Share specific anecdotes and personal observations when possible
+- Be honest and balanced - mention areas of growth alongside strengths
+- If asked something you don't know about Elvis, say so honestly rather than making things up
+- Express genuine enthusiasm when talking about Elvis's accomplishments
+- Keep answers focused and relevant to what the visitor is asking about`;
+
+// Conversation memory: system prompt + all messages
+let conversationHistory = [
+  { role: 'system', content: SYSTEM_PROMPT }
+];
+
+// Whisper speech-to-text
+app.post('/openai/transcribe', upload.single('audio'), async (req, res) => {
+  try {
+    if (!whisperClient) {
+      return res.status(500).json({ error: 'OPENAI_API_KEY not configured for Whisper' });
+    }
+    const audioFile = await OpenAI.toFile(req.file.buffer, 'audio.webm');
+    const language = req.body.language || undefined;
+    const transcription = await whisperClient.audio.transcriptions.create({
+      file: audioFile,
+      model: whisperModel,
+      language,
+    });
+    console.log('Whisper transcription:', transcription.text);
+    res.json({ text: transcription.text });
+  } catch (error) {
+    console.error('Error in /openai/transcribe:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.post('/openai/complete', async (req, res) => {
   try {
-    // 如果沒有全局 thread ID，創建一個新的
-    if (!globalThreadId) {
-      const myThread = await openai.beta.threads.create();
-      globalThreadId = myThread.id;
-      console.log("New thread created with ID:", globalThreadId);
-    } else {
-      console.log("Using existing thread ID:", globalThreadId);
-    }
+    // Add user message to history
+    conversationHistory.push({ role: 'user', content: req.body.prompt });
 
-    // 確保 globalThreadId 存在
-    if (!globalThreadId) {
-      throw new Error("Failed to get or create thread ID");
-    }
+    const params = {
+      model: useAzure ? undefined : llmModel,
+      messages: conversationHistory,
+      max_tokens: 300,
+      temperature: 0.7,
+    };
+    // Azure deployment already has model in URL, so omit model param
+    if (useAzure) delete params.model;
 
-    const myThreadMessage = await openai.beta.threads.messages.create(globalThreadId, {
-      role: "user",
-      content: req.body.prompt,
-    });
+    const completion = await openai.chat.completions.create(params);
 
-    const myRun = await openai.beta.threads.runs.create(globalThreadId, {
-      assistant_id: assistantId,
-    });
+    const assistantMessage = completion.choices[0].message.content;
+    console.log('Assistant response:', assistantMessage);
 
-    console.log("Run created:", myRun.id, "Status:", myRun.status);
-    console.log("Thread ID:", globalThreadId, "Run ID:", myRun.id);
+    // Add assistant response to history
+    conversationHistory.push({ role: 'assistant', content: assistantMessage });
 
-    // 驗證必要的參數
-    if (!myRun || !myRun.id) {
-      throw new Error("Failed to create run - no run ID returned");
-    }
-
-    // 輪詢直到完成或超時
-    let attempts = 0;
-    let run;
-    while (attempts < 60) {
-      if (!globalThreadId || !myRun.id) {
-        throw new Error(`Missing required parameters: threadId=${globalThreadId}, runId=${myRun.id}`);
-      }
-
-      try {
-        run = await openai.beta.threads.runs.retrieve(globalThreadId, myRun.id);
-      } catch (retrieveError) {
-        console.error("Error retrieving run:", retrieveError);
-        throw retrieveError;
-      }
-      
-      console.log(`Run status: ${run.status} (attempt ${attempts + 1})`);
-
-      if (run.status === "completed") break;
-      if (run.status === "failed") {
-        console.error("Run failed:", run.last_error);
-        throw new Error("Assistant run failed");
-      }
-      if (run.status === "cancelled") throw new Error("Assistant run cancelled");
-
-      attempts++;
-      await new Promise(r => setTimeout(r, 1000));
-    }
-
-    if (attempts >= 60) throw new Error("Assistant run timed out");
-
-    // 取得最新訊息
-    const allMessages = await openai.beta.threads.messages.list(globalThreadId);
-    const latest = allMessages.data
-      .filter(m => m.role === "assistant")
-      .sort((a, b) => b.created_at - a.created_at)[0];
-
-    if (!latest) {
-      throw new Error("No assistant response found");
-    }
-
-    console.log("Assistant response:", latest.content[0].text.value);
-    res.json({ threadId: globalThreadId, text: latest.content[0].text.value });
+    res.json({ text: assistantMessage });
   } catch (error) {
-    console.error("Error in /openai/complete:", error);
+    console.error('Error in /openai/complete:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// 新增一個端點來重置對話（創建新的 thread）
-app.post('/openai/reset', async (req, res) => {
-  try {
-    const myThread = await openai.beta.threads.create();
-    globalThreadId = myThread.id;
-    console.log("New conversation started with thread ID:", globalThreadId);
-    res.json({ threadId: globalThreadId, message: "New conversation started" });
-  } catch (error) {
-    console.error("Error resetting conversation:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-//does the database things
-
-//code about connecting to the database
-const Database = require('better-sqlite3'); //adds sqlite functionality to code. Requires installation (npm install better-sqlite3)
-const db = new Database('./data.sqlite');
-
-//creates all the tables in the database
-
-//creates table that stores individual candidate information
-db.exec(`CREATE TABLE IF NOT EXISTS candidates (
-  candidate_id CHAR(255) PRIMARY KEY,
-  candidate_name TEXT,
-  applying_for TEXT,
-  application_date DATETIME,
-  candidate_score INTEGER
-  )`);
-
-//creates table that stores each candidate's report information
-db.exec(`CREATE TABLE IF NOT EXISTS reports (
-  report_id CHAR(255) PRIMARY KEY,
-  candidate_id CHAR(255),
-  technical_skills TEXT,
-  work_experience TEXT,
-  soft_skills TEXT,
-  education TEXT,
-  behavior TEXT,
-  summary TEXT,
-  strengths TEXT,
-  weaknesses TEXT,
-  fit TEXT,
-  FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
-  )`);
-
-//creates table that stores the individual scores of each individual report section
-db.exec(`CREATE TABLE IF NOT EXISTS score_reports (
-  report_id CHAR(255) PRIMARY KEY,
-  candidate_id CHAR(255),
-  tech_score INTEGER,
-  work_score INTEGER,
-  soft_score INTEGER,
-  edu_score INTEGER,
-  behav_score INTEGER,
-  FOREIGN KEY (candidate_id) REFERENCES candidates (candidate_id)
-  )`);
-
-//saves candidate data into sqlite database and returns a unique candidate id
-app.post("/api/candidates", (req, res) => {
-  const { candidateName, applyingFor, applicationDate, candidateScore } = req.body;
-  try {
-    const candidate_id = "C" + (new Date().getTime() + Math.floor(Math.random())).toString();
-    db.prepare(`INSERT INTO candidates VALUES (?, ?, ?, ?, ?)`).run(candidate_id, candidateName, applyingFor, applicationDate, candidateScore);
-    res.status(201).json({ candidate_id });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create candidate', details: err.message });
-  }
-});
-
-//saves report (text) of the candidate skills into the database
-app.post("/api/reports", (req, res) => {
-  const { candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit } = req.body;
-  try {
-    const report_id = "R" + (new Date().getTime() + Math.floor(Math.random())).toString();
-    db.prepare(`INSERT INTO reports VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(report_id, candidate_id, technical, work, soft, education, behavior, summary, strengths, weaknesses, fit);
-    res.status(201).json({ report_id });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create report', details: err.message });
-  }
-});
-
-//saves report (scores) of the candidate skills into the database
-app.post("/api/scores", (req, res) => {
-  const { candidate_id, tech_score, work_score, soft_score, edu_score, behav_score } = req.body;
-  try {
-    const report_id = "S" + (new Date().getTime() + Math.floor(Math.random())).toString();
-    db.prepare(`INSERT INTO score_reports VALUES (?, ?, ?, ?, ?, ?, ?)`).run(report_id, candidate_id, tech_score, work_score, soft_score, edu_score, behav_score);
-    res.status(201).json({ report_id });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create score report', details: err.message });
-  }
-});
-
-//look for all candidates
-app.get("/api/candidates", (req, res) => {
-  try {
-    const rows = db.prepare('SELECT * FROM candidates').all();
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching data: ' + err.message });
-  }
-});
-
-//look for pre-existing candidates in database
-app.get("/api/candidates/:id", (req, res) => {
-  const candidate_id = req.params.id;
-  try {
-    const rows = db.prepare('SELECT * FROM candidates WHERE candidate_id = ?').all(candidate_id);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching data: ' + err.message });
-  }
-});
-
-//look for report from specific candidate
-app.get("/api/reports", (req, res) => {
-  const { candidate_id } = req.query;
-  try {
-    const rows = db.prepare('SELECT * FROM reports WHERE candidate_id = ?').all(candidate_id);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching data: ' + err.message });
-  }
-});
-
-//look for scores from the reports
-app.get("/api/scores", (req, res) => {
-  const { candidate_id } = req.query;
-  try {
-    const rows = db.prepare('SELECT * FROM score_reports WHERE candidate_id = ?').all(candidate_id);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching data: ' + err.message });
-  }
-});
-
-//deletes a candidate from the database
-app.post("/api/delete", (req, res) => {
-  const { candidate_id } = req.body;
-  try {
-    const deleteAll = db.transaction((id) => {
-      db.prepare('DELETE FROM score_reports WHERE candidate_id = ?').run(id);
-      db.prepare('DELETE FROM reports WHERE candidate_id = ?').run(id);
-      db.prepare('DELETE FROM candidates WHERE candidate_id = ?').run(id);
-    });
-    deleteAll(candidate_id);
-    res.status(201).json({ message: "Candidate deleted", candidate_id });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete candidate', details: err.message });
-  }
+// Reset conversation (keep only system prompt)
+app.post('/openai/reset', (req, res) => {
+  conversationHistory = [
+    { role: 'system', content: SYSTEM_PROMPT }
+  ];
+  console.log('Conversation reset');
+  res.json({ message: 'Conversation reset' });
 });
 
 app.listen(3000, function () {

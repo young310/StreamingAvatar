@@ -9,24 +9,24 @@
 body{
     overflow-x: hidden;
 }
-  
+
 
 button{
     width: 9vw;
     height: 5vh;
     border-radius: 1vw;
-  
+
     background-color: #4caf50; /* Green */
     border: none;
-  
+
     color: #fff;
     text-align: center;
     font-size: 1.1vw;
-  
+
     cursor: pointer;
     transition-duration: 0.1s;
   }
-  
+
   button:hover{
     background-color: #439b47;
   }
@@ -46,7 +46,7 @@ button{
     background-color: white;
     font-family:"Open Sans";
   }
-  
+
 #startBody{
     display: flex;
     flex-direction: row;
@@ -58,32 +58,32 @@ button{
     height: 90vh;
     clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%); /*crops the image*/
 }
-  
+
   #startText{
     padding-top: 25vh;
     padding-left: 2vw;
     margin-left: 2vw;
-  
+
     display: flex;
     flex-direction: column;
     gap:2vh;
-    
+
     height: auto;
     width: auto;
   }
-  
+
   #startBody h1{
     font-size: 3.5em;
     padding: 0;
     color: black;
   }
-  
+
   #startBody p{
     font-size: 1.5em;
     color: black;
     margin-bottom: 2vh;
   }
-  
+
   #newBtn{
     display: flex;
     flex-direction: row;
@@ -97,7 +97,7 @@ button{
     font-size: 1.2em;
     border-style: none;
   }
-  
+
   @keyframes e-spin {
     0% {
       transform: rotate(0deg);
@@ -106,7 +106,7 @@ button{
       transform: rotate(360deg);
     }
   }
-  
+
   #loader{
     display: none;
     width: 1vw;
@@ -116,44 +116,44 @@ button{
     border-radius: 50%;
     animation: e-spin 0.5s linear both infinite;
   }
-  
+
   #startBtn{
     display: none;
   }
-  
+
   #main{
     display: initial;
   }
-  
+
   #closeBtn{
     display: none;
     position: absolute;
     top: 21vh;
     left: 1vw;
   }
-  
+
   #statusBlock{
     position: absolute;
     height: 10vh;
     width: 100%;
     top: 90vh;
     left: 0;
-  
+
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     gap: 2.5vw;
-  
+
     background-color: rgb(38, 38, 38, 0.5);
     color: white;
   }
-  
+
   select{
     font-size: 1.1em;
     margin-left: 1vw;
   }
-  
+
   #taskInput{
     width: 79vw;
     height: 5vh;
@@ -162,18 +162,18 @@ button{
     padding-left: 1vw;
     font-size: 1.1em;
   }
-  
+
   ::placeholder{
     color: black;
     opacity: 0.3;
   }
-  
+
   #status{
     position: absolute;
     right: 2vw;
-    top: 2vh; 
-  } 
-  
+    top: 2vh;
+  }
+
   #buttonSwitch button{
     width: 6vw;
     background-color: white;
@@ -221,149 +221,6 @@ header p{
     font-size: 2em;
 }
 
-#links{
-    width: 40vw;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    transition-duration: 0.4s;
-}
-
-#links a{
-    font-size: 1.3em;
-}
-
-#links a:hover{
-    cursor: pointer;
-    color: #43B02A;
-}
-
-/*report css*/
-
-#resultsTop{
-    width: 40vw;
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    padding-bottom: 2vh;
-}
-
-#resultsRank{
-    padding-left: 3vw;
-    font-weight: italic;
-}
-
-#deleteCandidate{
-    position: absolute;
-    left: 87vw;
-    top: 15vh;
-    background-color: red;
-    padding: 5px;
-    width: 10vw;
-}
-
-#deleteCandidate:hover{
-    background-color: rgb(223, 0, 0);
-}
-
-#reportMain{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    margin: 2vh;
-    height: 84vh;
-}
-
-#sumBox{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 1.5vw;
-    padding-bottom: 1.5vw;
-    margin-left: 1vw;
-    margin-right: 1vw;
-    
-    width: 32vw;
-
-    background-color: #243F59;
-    border-radius: 2vw;
-    color: white;
-}
-
-#sumBox h2{
-    font-size: 1.5em;
-    font-weight: 600;
-}
-
-#sumBox h3{
-    font-size: 1.1em;
-    margin-top:1vh;
-}
-
-.sumBlurb{
-    width: 30vw;
-    height: 10vh;
-    margin-bottom: 3vh;
-}
-
-.sumBlurb h3{
-    font-size: 1.1em;
-    margin-bottom: 1vh;
-    font-weight: 600;
-}
-
-#paramBoxes{
-    width: 65vw;
-    height: 70vh;
-    margin-right: 1vh;
-    margin-top: 2vh;
-
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-}
-
-.param{
-    width: 30vw;
-    height: 18vh;
-    border-radius: 2vh;
-    border-style: solid;
-    border-width: 0.3vh;
-    padding: 1vh;
-}
-
-.param h2{
-    background-color: #CB5919;
-    border-radius: 1vh;
-    padding: 0.5vh;
-    color: white;
-    font-size: 1.3em;
-    width: 25vw;
-    margin-bottom: 1vh;
-}
-
-
-#techhead{
-    background-color: #1A1348;
-}
-#workhead{
-    background-color: #256221;
-}
-#softhead{
-    background-color: #CB5919;
-}
-#eduhead{
-    background-color: #BA4545;
-}
-#behhead{
-    background-color: #80623E;
-}
-#sumhead{
-    background-color: #3A3A3A;
-}
-
 #changepage{
     position: absolute;
     top: 50%;
@@ -383,285 +240,9 @@ header p{
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
 
-/*candidate list css*/
-
 h1{
     font-size: 2em;
     padding-left: 3vw;
     padding-top: 4vh;
     font-weight: bold;
-}
-
-#candidateTable{
-    width: 94vw;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 5vh;
-}
-
-#tableHeader, .candidateRow{
-    width: 94vw;
-    height: 11vh;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    border-style: solid;
-    border-width: 0.5px;
-    color: black;
-}
-
-#tableHeader{
-    background-color: #43B02A;
-    border-color: #43B02A;
-    height: 7vh;
-    color: white;
-}
-
-#tableHeader p{
-    font-weight: 600;
-}
-
-#tableHeader .tableBack{
-    gap: 16.5vw;
-}
-
-.candidateRow{
-    border-color: #9D9D9D;
-    border-top: 0;
-    transition-duration: 0.1s;
-}
-
-.candidateRow:hover{
-    cursor: pointer;
-    background-color: #e4e4e4;
-}
-
-.tableFront, .tableBack{
-    width: 70vw;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 4vw;
-    margin-left: 2vw;
-}
-
-.tableName{
-    font-weight: 600;
-}
-
-.tableFront p{
-    width: 14vw;
-}
-
-.tableBack{
-    width: 30vw;
-    gap: 6vw;
-}
-
-
-/* compare candidates css */
-#compareContainer{
-    display: flex;
-    width: 80vw;
-    margin: auto;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    margin-top: 4vh;
-}
-
-#VS{
-    font-size: 2em;
-    font-weight: bold;
-}
-
-.compareBox{
-    width: 30vw;
-    height: 70vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    border-radius: 10px;
-    border-color: #43B02A;
-    border-style: solid;
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
-    overflow: scroll; 
-}
-
-.compareBox::-webkit-scrollbar { 
-    display: none;  /* Safari and Chrome */
-}
-
-.returnToList{
-    position: relative;
-    left: -12vw;
-    top: 2vh;
-    font-size: 1.8em;
-}
-
-.returnToList:hover{
-    cursor: pointer;
-}
-
-.compareBox h2{
-    font-size: 1.5em;
-    font-weight: 600;
-    padding-bottom: 3vh;
-    padding-top: 1vh;
-}
-
-.rankBlurb{
-    font-style: italic;
-}
-
-.changeCompareView{
-    color: #3485E4;
-}
-
-.changeCompareView:hover{
-    cursor: pointer;
-}
-
-.scoreBox{
-    margin-top: 3vh;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-}
-
-.scoreTitles, .scoreBars{
-    display: flex;
-    flex-direction: column;
-    gap: 3vh;
-}
-
-.scoreTitles p{
-    height: 3vh
-}
-
-.scoreBars{
-    width: 10vw;
-    margin-left: 3vw;
-}
-
-.scoreBars div{
-    margin: 1vh 0 1vh 0;
-    height: 0.9vh;
-}
-
-.techBar{
-    background-color: #62E9E1;
-}
-
-.workBar{
-    background-color: #6D62E9;
-}
-
-.eduBar{
-    background-color: #6DE962;
-}
-
-.softBar{
-    background-color: #E96262;
-}
-
-.beBar{
-    background-color: #E6E962;
-}
-
-.selectCandidate{
-    border-radius: 10px;
-    font-size: 1em;
-    font-style: italic;
-    width: 13vw;
-    margin: auto;
-    height: 6vh;
-}
-
-.compareBox canvas{
-    padding: 2vh 0 2vh 0;
-}
-
-.compareList{
-    width: 100%;
-    height: 100%;
-}
-
-.compareList h3{
-    padding: 2.5vh;
-    font-size: 1.3em;
-    font-weight: 600;
-    text-align: center;
-    border-width: 0 0 0.2px 0;
-    background-color: #43B02A;
-    color: white;
-    border-color: #9D9D9D;
-    border-style: solid;
-}
-
-.compareSelection{
-    height: 10vh;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0;
-    border-style: solid;
-    border-width: 0 0 0.2px 0;
-    border-color: #9D9D9D;
-    background-color: white;
-}
-
-.compareSelection:hover{
-    background-color: #e4e4e4;
-    cursor: pointer;
-    transition-duration: 0.1s;
-}
-
-.compareSelection div{
-    display: flex;
-    flex-direction: column;
-    gap: 0.5vh;
-    width: 70%;
-    margin-right: 5%;
-    margin-left: 5%;
-}
-
-.compareSelection p{
-    font-size: 1em;
-}
-
-.compareText{
-    padding: 0 2vw 2vw 2vw;
-}
-
-.compareText h3{
-    color: red;
-    font-weight: 600;
-    margin-top: 2vh;
-    margin-bottom: 0.2vh;
-}
-
-#resetCandidates{
-    position: absolute;
-    background-color: white;
-    color: black;
-    border-style: solid;
-    border-color: black;
-    border-width: 1.5px;
-    border-radius: 10px;
-    height: 4vh;
-    width: auto;
-    padding: 0 10px 0 10px;
-    left: 76vw;
-    top: 17vh;
-}
-
-#resetCandidates:hover{
-    background-color: #e4e4e4;
-    cursor: pointer;
-    transition-duration: 0.1s;
 }
